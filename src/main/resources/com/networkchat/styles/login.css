@@ -1,0 +1,61 @@
+#lWelcome {
+    -fx-font-family: Roboto;
+    -fx-font-weight: bold;
+    -fx-font-size: 40px;
+    -fx-color: white;
+}
+
+#bckgLogin {
+    -fx-background: linear-gradient(to right, #00D4FF 0%, #090979 52%, #020024 100%);
+}
+
+#btnClose:hover, #btnMinimize:hover {
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, #FFFFFF, 5, 0, 0, 0);
+}
+
+#eUsername, #ePassword, #eEmail {
+    -fx-font-family: Roboto;
+    -fx-font-size: 15px;
+    -fx-background-color: white;
+    -fx-background-radius: 5px;
+    -fx-prompt-text-fill: #090979;
+}
+
+#eUsername:focused, #ePassword:focused, #eEmail:focused {
+    -fx-effect: innershadow(three-pass-box, #000000, 4, 0, 0, 0);
+}
+
+#btnLogin, #btnSignUp {
+    -fx-background-color: #D6B036;
+    -fx-background-radius: 10px;
+    -fx-text-fill: white;
+    -fx-font-family: Roboto;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+#btnLogin:hover, #btnSignUp:hover {
+    -fx-effect: innershadow(three-pass-box, #000000, 4, 0, 0, 0);
+    -fx-cursor: hand;
+}
+
+#lMember, #lRegister, #lSignIn {
+    -fx-text-fill: white;
+    -fx-font-family: Roboto;
+    -fx-font-size: 15px;
+}
+
+#lRegister, #lSignIn {
+    -fx-font-weight: bold;
+}
+
+#lRegister:hover, #lSignIn:hover {
+    -fx-underline: true;
+    -fx-cursor: hand;
+    -fx-text-fill: #D6B036;
+}
+
+#lRegister:pressed, #lSignIn:pressed {
+    -fx-text-fill: white;
+}
