@@ -1,19 +1,18 @@
-package com.networkchat.fxml;
+package com.networkchat.login;
 
 import com.networkchat.ChatApplication;
+import com.networkchat.fxml.Controllable;
+import com.networkchat.resources.FxmlView;
+import com.networkchat.fxml.StageManager;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseDragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.scene.layout.AnchorPane;
-
-import java.io.IOException;
 
 public class LoginController implements Controllable {
 

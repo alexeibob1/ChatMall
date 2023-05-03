@@ -1,5 +1,8 @@
-package com.networkchat.fxml;
+package com.networkchat.resources;
 
+import com.networkchat.fxml.StageManager;
+import com.networkchat.login.LoginController;
+import com.networkchat.registration.RegistrationController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 
@@ -19,21 +22,21 @@ public enum FxmlView {
         }
 
         @Override
-        Parent getRoot() {
+        public Parent getRoot() {
             return this.root;
         }
         @Override
-        String getFxmlFile() {
+        public String getFxmlFile() {
             return "/com/networkchat/fxml/login-form.fxml";
         }
 
         @Override
-        Class<?> getControllerClass() {
+        public Class<?> getControllerClass() {
             return LoginController.class;
         }
 
         @Override
-        FXMLLoader getFxmlLoader() {
+        public FXMLLoader getFxmlLoader() {
             return fxmlLoader;
         }
     },
@@ -49,31 +52,31 @@ public enum FxmlView {
             }
         }
         @Override
-        String getFxmlFile() {
+        public String getFxmlFile() {
             return "/com/networkchat/fxml/registration-form.fxml";
         }
 
         @Override
-        Class<?> getControllerClass() {
+        public Class<?> getControllerClass() {
             return RegistrationController.class;
         }
 
         @Override
-        FXMLLoader getFxmlLoader() {
+        public FXMLLoader getFxmlLoader() {
             return fxmlLoader;
         }
 
         @Override
-        Parent getRoot() {
+        public Parent getRoot() {
             return this.root;
         }
     };
 
-    abstract String getFxmlFile();
+    public abstract String getFxmlFile();
 
-    abstract Class<?> getControllerClass();
+    public abstract Class<?> getControllerClass();
 
-    abstract FXMLLoader getFxmlLoader();
+    public abstract FXMLLoader getFxmlLoader();
 
-    abstract Parent getRoot();
+    public abstract Parent getRoot();
 }

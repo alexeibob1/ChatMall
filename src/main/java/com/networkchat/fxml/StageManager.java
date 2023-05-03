@@ -1,5 +1,6 @@
 package com.networkchat.fxml;
 
+import com.networkchat.resources.FxmlView;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;

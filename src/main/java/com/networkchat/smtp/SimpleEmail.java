@@ -1,4 +1,4 @@
-package com.networkchat.SMTP;
+package com.networkchat.smtp;
 
 import javax.mail.Session;
 import java.util.Properties;

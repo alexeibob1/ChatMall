@@ -1,4 +1,4 @@
-package com.networkchat.fxml;
+package com.networkchat;
 
 import javafx.fxml.FXML;
 import javafx.scene.image.ImageView;

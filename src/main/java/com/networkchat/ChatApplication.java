@@ -1,15 +1,10 @@
 package com.networkchat;
 
-import com.networkchat.fxml.FxmlView;
-import com.networkchat.fxml.LoginController;
+import com.networkchat.resources.FxmlView;
 import com.networkchat.fxml.StageManager;
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-
-import java.io.IOException;
 
 public class ChatApplication extends Application {
     @Override

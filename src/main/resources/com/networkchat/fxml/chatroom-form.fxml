@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.Pane?>
 
 
-<AnchorPane prefHeight="914.0" prefWidth="1235.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.networkchat.fxml.ChatroomController">
+<AnchorPane prefHeight="914.0" prefWidth="1235.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.networkchat.ChatroomController">
    <children>
       <Pane fx:id="pLeftMenu" layoutY="37.0" prefHeight="877.0" prefWidth="303.0" />
       <Pane fx:id="pChat" layoutX="303.0" layoutY="37.0" prefHeight="877.0" prefWidth="675.0" />
