@@ -1,17 +1,16 @@
 package com.networkchat.registration;
 
 import com.networkchat.ChatApplication;
-
 import com.networkchat.client.User;
 import com.networkchat.fxml.Controllable;
-import com.networkchat.resources.FxmlView;
 import com.networkchat.fxml.StageManager;
+import com.networkchat.resources.FxmlView;
 import com.networkchat.security.AuthDataEncryptor;
 import com.networkchat.security.KeyDistributor;
+import com.networkchat.sql.SQLConnection;
 import com.networkchat.sql.SqlUserErrorCode;
 import com.networkchat.tooltips.EmailTooltip;
 import com.networkchat.tooltips.UsernameTooltip;
-import com.networkchat.sql.SQLConnection;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -23,17 +22,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
-import javax.crypto.Cipher;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.Date;
 
 public class RegistrationController implements Controllable {
 
@@ -96,20 +85,16 @@ public class RegistrationController implements Controllable {
     void onBtnSignUpClicked(MouseEvent event) {
         removeTooltips();
         try {
-//            Cipher encryptCipher = Cipher.getInstance("RSA");
-//            encryptCipher.init(Cipher.ENCRYPT_MODE, publicKey);
-//            byte[] encryptedPassword = encryptCipher.doFinal(password.getBytes(StandardCharsets.UTF_8));
-//            String encodedPassword = Base64.getEncoder().encodeToString(encryptedPassword);
-//            int l = encodedPassword.length();
             SQLConnection dbConnection = new SQLConnection();
-            User user = new User(eUsername.getText(), eEmail.getText(), ePassword.getText(), new Date());
+            User user = new User(eUsername.getText(), eEmail.getText(), ePassword.getText(), LocalDateTime.now());
             SqlUserErrorCode sqlResult = dbConnection.checkNewUserInfo(user);
             switch (sqlResult) {
                 case REPEATED_USERNAME -> eUsername.setTooltip(UsernameTooltip.getTooltip());
                 case REPEATED_EMAIL -> eEmail.setTooltip(EmailTooltip.getTooltip());
                 case SUCCESS -> {
                     KeyDistributor.generateKeys(user, dbConnection);
-                    AuthDataEncryptor.encryptUserData(user, dbConnection);
+                    AuthDataEncryptor.encryptUserData(user);
+                    dbConnection.safeUserData(user);
                 }
             }
         } catch (Exception e) {
@@ -155,5 +140,4 @@ public class RegistrationController implements Controllable {
         this.ePassword.setTooltip(null);
         this.eEmail.setTooltip(null);
     }
-
 }

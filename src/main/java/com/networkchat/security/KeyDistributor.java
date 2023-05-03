@@ -24,10 +24,9 @@ public class KeyDistributor {
     }
 
     private static void safePublicKey(PublicKey key, User user) {
-        byte[] byteKey = key.getEncoded();
-        user.setPublicKey(byteKey);
+        user.setPublicKey(key);
         try (FileOutputStream fileOutputStream = new FileOutputStream("src/main/java/com/networkchat/config/public.key")) {
-            fileOutputStream.write(byteKey);
+            fileOutputStream.write(key.getEncoded());
         } catch (Exception e) {
             e.printStackTrace();
         }

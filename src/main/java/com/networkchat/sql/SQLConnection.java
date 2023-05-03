@@ -4,6 +4,7 @@ package com.networkchat.sql;
 import com.networkchat.client.User;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 
 public class SQLConnection {
     private Connection connection;
@@ -42,18 +43,7 @@ public class SQLConnection {
         catch (SQLException e) {
             e.printStackTrace();
         }
-
-
-        //if everything is correct
-//        try (PreparedStatement stmt = this.connection.prepareStatement("INSERT INTO users_auth (username, email, salt, password, enabled) VALUES (?, ?, ?, ?, ?)")) {
-//            stmt.setString(1, username);
-//            stmt.setString(2, email);
-//            stmt.setString(3, "n5bb53b");
-//            stmt.setString(4, password);
-//            stmt.setInt(5, 0);
-//            stmt.executeUpdate();
-//            return SqlUserErrorCode.SUCCESS;
-//        }
+        
         return SqlUserErrorCode.SUCCESS;
     }
 
@@ -66,6 +56,23 @@ public class SQLConnection {
                 "INSERT INTO `private_keys` (username, rsa_key) VALUES (?, ?)")) {
             stmt.setString(1, username);
             stmt.setString(2, key);
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void safeUserData(User user) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(
+                "INSERT INTO `users_auth` (user_id, email, salt, password, time_stamp, enabled) " +
+                        "VALUES ((SELECT k.user_id FROM `private_keys` k WHERE k.username = ?), ?, ?, ?, ?, ?)"
+        )) {
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, user.getEmail());
+            stmt.setString(3, user.getSalt());
+            stmt.setString(4, user.getEncryptedData());
+            stmt.setTimestamp(5, Timestamp.valueOf(user.getTimeStamp()));
+            stmt.setByte(6, (byte) 0);
             stmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,5 +1,8 @@
 package com.networkchat.client;
 
+import java.security.PublicKey;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class User {
@@ -7,14 +10,16 @@ public class User {
     private String email;
     private String password;
 
-    private byte[] publicKey;
+    private PublicKey publicKey;
 
-    private byte[] salt;
+    private String salt;
 
-    private Date timeStamp;
+    private LocalDateTime timeStamp;
     private boolean enabled;
 
-    public User(String username, String email, String password, Date timeStamp) {
+    private String encryptedData;
+
+    public User(String username, String email, String password, LocalDateTime timeStamp) {
         this.username = username;
         this.email = email;
         this.password = password;
@@ -46,15 +51,19 @@ public class User {
         this.password = password;
     }
 
-    public void setSalt(byte[] salt) {
+    public void setSalt(String salt) {
         this.salt = salt;
     }
 
-    public Date getTimeStamp() {
+    public String getSalt() {
+        return this.salt;
+    }
+
+    public LocalDateTime getTimeStamp() {
         return timeStamp;
     }
 
-    public void setTimeStamp(Date timeStamp) {
+    public void setTimeStamp(LocalDateTime timeStamp) {
         this.timeStamp = timeStamp;
     }
 
@@ -66,7 +75,19 @@ public class User {
         this.enabled = enabled;
     }
 
-    public void setPublicKey(byte[] publicKey) {
+    public void setPublicKey(PublicKey publicKey) {
         this.publicKey = publicKey;
+    }
+
+    public PublicKey getPublicKey() {
+        return this.publicKey;
+    }
+
+    public String getEncryptedData() {
+        return encryptedData;
+    }
+
+    public void setEncryptedData(String encryptedData) {
+        this.encryptedData = encryptedData;
     }
 }
