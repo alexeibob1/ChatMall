@@ -1,7 +1,6 @@
 package com.networkchat.security;
 
 import com.networkchat.client.User;
-import com.networkchat.sql.SQLConnection;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -14,7 +13,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 
 public class AuthDataEncryptor {
-    public static void encryptUserData(User user) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    public static void encryptRegistrationData(User user) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         Cipher encryptCipher = Cipher.getInstance("RSA");
         encryptCipher.init(Cipher.ENCRYPT_MODE, user.getPublicKey());
         String salt = generateSalt();
@@ -22,6 +21,11 @@ public class AuthDataEncryptor {
         String message = user.getSalt() + user.getUsername() + user.getPassword();
         byte[] encryptedMessage = encryptCipher.doFinal(message.getBytes(StandardCharsets.UTF_8));
         user.setEncryptedData(Base64.getEncoder().encodeToString(encryptedMessage));
+    }
+
+    public static void encryptLoginData(User user) throws NoSuchPaddingException, NoSuchAlgorithmException {
+        Cipher encryptCipher = Cipher.getInstance("RSA");
+
     }
 
     private static String generateSalt() {

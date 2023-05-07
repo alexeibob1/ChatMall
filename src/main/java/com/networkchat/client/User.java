@@ -1,11 +1,12 @@
 package com.networkchat.client;
 
+import java.io.Serializable;
 import java.security.PublicKey;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-public class User {
+public class User implements Serializable {
     private String username;
     private String email;
     private String password;
@@ -25,6 +26,11 @@ public class User {
         this.password = password;
         this.timeStamp = timeStamp;
         this.enabled = false;
+    }
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
     public String getUsername() {

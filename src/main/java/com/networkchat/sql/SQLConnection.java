@@ -4,11 +4,10 @@ package com.networkchat.sql;
 import com.networkchat.client.User;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 
 public class SQLConnection {
     private Connection connection;
-    private final String DB_ADDRESS = "jdbc:mysql://chatmall.server.com:3306/chatmall";
+    private final String DB_ADDRESS = "jdbc:mysql://localhost:3306/chatmall";
     private final String ADMIN_USERNAME = "root";
     private final String ADMIN_PASSWORD = "";
     public SQLConnection() throws ClassNotFoundException, SQLException {
@@ -16,35 +15,25 @@ public class SQLConnection {
         this.connection = DriverManager.getConnection(DB_ADDRESS, ADMIN_USERNAME, ADMIN_PASSWORD);
     }
 
-    public SqlUserErrorCode checkNewUserInfo(User user) {
-        String username = user.getUsername();
-        String email = user.getEmail();
-
+    public SqlResultCode checkNewUserInfo(User user) {
         //check for existing username
-        try (PreparedStatement stmt = this.connection.prepareStatement("SELECT * FROM private_keys WHERE username=? LIMIT 1")) {
-            stmt.setString(1, username);
-            ResultSet resultSet = stmt.executeQuery();
-            if (resultSet.isBeforeFirst()) {
-                return SqlUserErrorCode.REPEATED_USERNAME;
-            }
-        }
-        catch (SQLException e) {
-            e.printStackTrace();
+        if (checkUsernameExistence(user) == SqlResultCode.EXISTING_USERNAME) {
+            return SqlResultCode.EXISTING_USERNAME;
         }
 
         //check for existing email
         try (PreparedStatement stmt = this.connection.prepareStatement("SELECT * FROM users_auth WHERE email=? LIMIT 1")) {
-            stmt.setString(1, email);
+            stmt.setString(1, user.getEmail());
             ResultSet resultSet = stmt.executeQuery();
             if (resultSet.isBeforeFirst()) {
-                return SqlUserErrorCode.REPEATED_EMAIL;
+                return SqlResultCode.REPEATED_EMAIL;
             }
         }
         catch (SQLException e) {
             e.printStackTrace();
         }
-        
-        return SqlUserErrorCode.SUCCESS;
+
+        return SqlResultCode.SUCCESS;
     }
 
     public void sendConfirmationCode() {
@@ -77,5 +66,23 @@ public class SQLConnection {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public SqlResultCode checkUsernameExistence(User user) {
+        try (PreparedStatement stmt = this.connection.prepareStatement("SELECT * FROM private_keys WHERE username=? LIMIT 1")) {
+            stmt.setString(1, user.getUsername());
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.isBeforeFirst()) {
+                return SqlResultCode.EXISTING_USERNAME;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return SqlResultCode.NOT_EXISTING_USERNAME;
+    }
+
+    public String getSalt(String username) {
+        return "";
     }
 }

@@ -8,7 +8,7 @@ import com.networkchat.resources.FxmlView;
 import com.networkchat.security.AuthDataEncryptor;
 import com.networkchat.security.KeyDistributor;
 import com.networkchat.sql.SQLConnection;
-import com.networkchat.sql.SqlUserErrorCode;
+import com.networkchat.sql.SqlResultCode;
 import com.networkchat.tooltips.EmailTooltip;
 import com.networkchat.tooltips.UsernameTooltip;
 import javafx.fxml.FXML;
@@ -87,13 +87,13 @@ public class RegistrationController implements Controllable {
         try {
             SQLConnection dbConnection = new SQLConnection();
             User user = new User(eUsername.getText(), eEmail.getText(), ePassword.getText(), LocalDateTime.now());
-            SqlUserErrorCode sqlResult = dbConnection.checkNewUserInfo(user);
+            SqlResultCode sqlResult = dbConnection.checkNewUserInfo(user);
             switch (sqlResult) {
-                case REPEATED_USERNAME -> eUsername.setTooltip(UsernameTooltip.getTooltip());
+                case EXISTING_USERNAME -> eUsername.setTooltip(UsernameTooltip.getTooltip());
                 case REPEATED_EMAIL -> eEmail.setTooltip(EmailTooltip.getTooltip());
                 case SUCCESS -> {
                     KeyDistributor.generateKeys(user, dbConnection);
-                    AuthDataEncryptor.encryptUserData(user);
+                    AuthDataEncryptor.encryptRegistrationData(user);
                     dbConnection.safeUserData(user);
                 }
             }

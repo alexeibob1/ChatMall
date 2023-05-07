@@ -6,6 +6,10 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+
 public class ChatApplication extends Application {
     @Override
     public void start(Stage stage) {
@@ -17,6 +21,14 @@ public class ChatApplication extends Application {
     }
 
     public static void main(String[] args) {
+        try {
+            Socket socket = new Socket("localhost", 4000);
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+        } catch (Exception e) {
+            System.err.println("Can't connect to server.");
+            e.printStackTrace();
+        }
         launch();
     }
 }
