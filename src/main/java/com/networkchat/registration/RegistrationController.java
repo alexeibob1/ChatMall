@@ -1,22 +1,21 @@
 package com.networkchat.registration;
 
 import com.networkchat.ChatApplication;
+import com.networkchat.client.ClientSocket;
 import com.networkchat.client.User;
 import com.networkchat.fxml.Controllable;
 import com.networkchat.fxml.StageManager;
 import com.networkchat.resources.FxmlView;
 import com.networkchat.security.AuthDataEncryptor;
 import com.networkchat.security.KeyDistributor;
+import com.networkchat.server.ClientRequest;
 import com.networkchat.sql.SQLConnection;
 import com.networkchat.sql.SqlResultCode;
 import com.networkchat.tooltips.EmailTooltip;
 import com.networkchat.tooltips.UsernameTooltip;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -56,10 +55,14 @@ public class RegistrationController implements Controllable {
 
     @FXML
     private Label lWelcome;
+    private String errorStyle = "-fx-border-radius: 5px;\n" +
+            "-fx-border-color: red;\n" +
+            "-fx-border-width: 2px;";
 
     Stage stage;
 
     StageManager stageManager;
+    ClientSocket socket;
 
     @FXML
     void onBtnMinimizeClicked(MouseEvent event) {
@@ -78,25 +81,37 @@ public class RegistrationController implements Controllable {
 
     @FXML
     void onBtnSignInClicked(MouseEvent event) {
-        this.stageManager.switchScene(FxmlView.LOGIN);
+        this.stageManager.switchScene(FxmlView.LOGIN, this.socket);
     }
 
     @FXML
     void onBtnSignUpClicked(MouseEvent event) {
         removeTooltips();
         try {
-            SQLConnection dbConnection = new SQLConnection();
             User user = new User(eUsername.getText(), eEmail.getText(), ePassword.getText(), LocalDateTime.now());
-            SqlResultCode sqlResult = dbConnection.checkNewUserInfo(user);
-            switch (sqlResult) {
-                case EXISTING_USERNAME -> eUsername.setTooltip(UsernameTooltip.getTooltip());
-                case REPEATED_EMAIL -> eEmail.setTooltip(EmailTooltip.getTooltip());
-                case SUCCESS -> {
-                    KeyDistributor.generateKeys(user, dbConnection);
-                    AuthDataEncryptor.encryptRegistrationData(user);
-                    dbConnection.safeUserData(user);
+            user.setRequest(ClientRequest.REGISTER);
+            this.socket.getOut().writeObject(user);
+            this.socket.getOut().flush();
+
+            Object response = this.socket.getIn().readObject();
+
+            if (response.getClass() == SqlResultCode.class) {
+                SqlResultCode resultCode = (SqlResultCode) response;
+                switch (resultCode) {
+                    case EXISTING_USERNAME -> {
+                        eUsername.setTooltip(UsernameTooltip.getTooltip());
+                        eUsername.setStyle(eUsername.getStyle() + errorStyle);
+                    }
+                    case REPEATED_EMAIL -> {
+                        eEmail.setTooltip(EmailTooltip.getTooltip());
+                        eEmail.setStyle(eUsername.getStyle() + errorStyle);
+                    }
+                    case SUCCESS -> {
+
+                    }
                 }
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -119,13 +134,18 @@ public class RegistrationController implements Controllable {
     }
 
     @Override
+    public void setSocket(ClientSocket socket) {
+        this.socket = socket;
+    }
+
+    @Override
     public void init() {
         Scene scene = this.stage.getScene();
         scene.getStylesheets().add(ChatApplication.class.getResource("styles/login.css").toExternalForm());
         cleanFields();
-        ePassword.setText("pupsik");
-        eEmail.setText("masha@gmail.com");
-        eUsername.setText("masha");
+        ePassword.setText("12345678");
+        eEmail.setText("funnyguylo0937@gmail.com");
+        eUsername.setText("alexeibob");
     }
 
     private void cleanFields() {
@@ -139,5 +159,7 @@ public class RegistrationController implements Controllable {
         this.eUsername.setTooltip(null);
         this.ePassword.setTooltip(null);
         this.eEmail.setTooltip(null);
+        eUsername.setStyle(eUsername.getStyle().replaceAll(errorStyle, ""));
+        eEmail.setStyle(eUsername.getStyle().replaceAll(errorStyle, ""));
     }
 }

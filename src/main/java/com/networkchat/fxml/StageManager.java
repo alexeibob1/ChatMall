@@ -1,5 +1,6 @@
 package com.networkchat.fxml;
 
+import com.networkchat.client.ClientSocket;
 import com.networkchat.resources.FxmlView;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -35,24 +36,25 @@ public class StageManager {
         this.primaryStage.setScene(new Scene(initForm.getRoot()));
     }
 
-    public void switchScene(FxmlView formType) {
+    public void switchScene(FxmlView formType, ClientSocket socket) {
         this.fxmlLoader = formType.getFxmlLoader();
-        show(formType.getRoot());
+        show(formType.getRoot(), socket);
     }
 
-    private void show(Parent root) {
+    private void show(Parent root, ClientSocket socket) {
         Scene scene = this.primaryStage.getScene();
         scene.setRoot(root);
         scene.getWindow().sizeToScene();
         this.primaryStage.setScene(scene);
-        initController();
+        initController(socket);
         this.primaryStage.show();
     }
 
-    private void initController() {
+    private void initController(ClientSocket socket) {
         Controllable controller = this.fxmlLoader.getController();
         controller.setStage(this.primaryStage);
         controller.setStageManager(this);
+        controller.setSocket(socket);
         controller.init();
     }
 

@@ -1,5 +1,7 @@
 package com.networkchat.client;
 
+import com.networkchat.server.ClientRequest;
+
 import java.io.Serializable;
 import java.security.PublicKey;
 import java.time.LocalDate;
@@ -7,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 public class User implements Serializable {
+    private ClientRequest request;
     private String username;
     private String email;
     private String password;
@@ -32,6 +35,8 @@ public class User implements Serializable {
         this.username = username;
         this.password = password;
     }
+
+    public User() {}
 
     public String getUsername() {
         return username;
@@ -95,5 +100,13 @@ public class User implements Serializable {
 
     public void setEncryptedData(String encryptedData) {
         this.encryptedData = encryptedData;
+    }
+
+    public ClientRequest getRequest() {
+        return request;
+    }
+
+    public void setRequest(ClientRequest request) {
+        this.request = request;
     }
 }

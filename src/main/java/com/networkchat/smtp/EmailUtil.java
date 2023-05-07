@@ -15,7 +15,7 @@ public class EmailUtil {
             msg.addHeader("format", "flowed");
             msg.addHeader("Content-Transfer-Encoding", "8bit");
 
-            msg.setFrom(new InternetAddress("no_reply@example.com", "NoReply-JD"));
+            msg.setFrom(new InternetAddress("no_reply@example.com", "NoReply-ChatMall"));
 
             msg.setReplyTo(InternetAddress.parse("no_reply@example.com", false));
 
@@ -26,7 +26,7 @@ public class EmailUtil {
             msg.setSentDate(new Date());
 
             msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail, false));
-            System.out.println("Message is ready");
+
             Transport.send(msg);
 
             System.out.println("EMail Sent Successfully!!");

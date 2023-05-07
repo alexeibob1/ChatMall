@@ -35,7 +35,7 @@ public class KeyDistributor {
     private static void safePrivateKey(PrivateKey key, SQLConnection dbConnection, User user) {
         byte[] keyBytes = key.getEncoded();
         String strKey = Base64.getEncoder().encodeToString(keyBytes);
-        dbConnection.safePrivateKey(strKey, user.getUsername());
+        //dbConnection.safePrivateKey(strKey, user.getUsername());
     }
 
     public static PublicKey getPublicKey() throws NoSuchAlgorithmException, InvalidKeySpecException {

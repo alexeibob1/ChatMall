@@ -8,24 +8,36 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 
 public class AuthDataEncryptor {
-    public static void encryptRegistrationData(User user) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        Cipher encryptCipher = Cipher.getInstance("RSA");
-        encryptCipher.init(Cipher.ENCRYPT_MODE, user.getPublicKey());
+    public static void encryptRegistrationData(User user) throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
         String salt = generateSalt();
         user.setSalt(salt);
         String message = user.getSalt() + user.getUsername() + user.getPassword();
-        byte[] encryptedMessage = encryptCipher.doFinal(message.getBytes(StandardCharsets.UTF_8));
-        user.setEncryptedData(Base64.getEncoder().encodeToString(encryptedMessage));
+        byte[] hash = digest.digest(message.getBytes(StandardCharsets.UTF_8));
+        user.setEncryptedData(bytesToHex(hash));
     }
 
     public static void encryptLoginData(User user) throws NoSuchPaddingException, NoSuchAlgorithmException {
         Cipher encryptCipher = Cipher.getInstance("RSA");
 
+    }
+
+    public static String bytesToHex(byte[] hash) {
+        StringBuilder hexString = new StringBuilder(2 * hash.length);
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
     }
 
     private static String generateSalt() {

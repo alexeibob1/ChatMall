@@ -1,5 +1,6 @@
 package com.networkchat;
 
+import com.networkchat.client.ClientSocket;
 import com.networkchat.resources.FxmlView;
 import com.networkchat.fxml.StageManager;
 import javafx.application.Application;
@@ -13,22 +14,19 @@ import java.net.Socket;
 public class ChatApplication extends Application {
     @Override
     public void start(Stage stage) {
-        stage.initStyle(StageStyle.UNDECORATED);
-        stage.setResizable(false);
+        try {
+            ClientSocket socket = new ClientSocket(new Socket("localhost", 4000));
+            stage.initStyle(StageStyle.UNDECORATED);
+            stage.setResizable(false);
 
-        StageManager stageManager = new StageManager(stage, FxmlView.LOGIN);
-        stageManager.switchScene(FxmlView.LOGIN);
+            StageManager stageManager = new StageManager(stage, FxmlView.LOGIN);
+            stageManager.switchScene(FxmlView.LOGIN, socket);
+        } catch (Exception e) {
+            System.err.println("Can't connect to server.");
+        }
     }
 
     public static void main(String[] args) {
-        try {
-            Socket socket = new Socket("localhost", 4000);
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-        } catch (Exception e) {
-            System.err.println("Can't connect to server.");
-            e.printStackTrace();
-        }
         launch();
     }
 }

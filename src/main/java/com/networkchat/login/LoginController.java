@@ -1,11 +1,13 @@
 package com.networkchat.login;
 
 import com.networkchat.ChatApplication;
+import com.networkchat.client.ClientSocket;
 import com.networkchat.client.User;
 import com.networkchat.fxml.Controllable;
 import com.networkchat.resources.FxmlView;
 import com.networkchat.fxml.StageManager;
 import com.networkchat.security.KeyDistributor;
+import com.networkchat.server.ClientRequest;
 import com.networkchat.sql.SQLConnection;
 import com.networkchat.sql.SqlResultCode;
 import javafx.fxml.FXML;
@@ -20,6 +22,7 @@ import javafx.scene.layout.AnchorPane;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.Socket;
 
 public class LoginController implements Controllable {
 
@@ -42,6 +45,7 @@ public class LoginController implements Controllable {
 
     Stage stage;
     StageManager stageManager;
+    ClientSocket socket;
 
     @FXML
     void onBtnCloseClicked(MouseEvent event) {
@@ -65,7 +69,7 @@ public class LoginController implements Controllable {
 
     @FXML
     void onRegisterBtnClicked(MouseEvent event) {
-        this.stageManager.switchScene(FxmlView.REGISTRATION);
+        this.stageManager.switchScene(FxmlView.REGISTRATION, this.socket);
     }
 
     @Override
@@ -76,6 +80,11 @@ public class LoginController implements Controllable {
     @Override
     public void setStageManager(StageManager stageManager) {
         this.stageManager = stageManager;
+    }
+
+    @Override
+    public void setSocket(ClientSocket socket) {
+        this.socket = socket;
     }
 
     @Override
@@ -94,18 +103,17 @@ public class LoginController implements Controllable {
     void onBtnLoginClicked(MouseEvent event) {
         try {
             User user = new User(eUsername.getText(), ePassword.getText());
+            user.setRequest(ClientRequest.LOGIN);
+            this.socket.getOut().writeObject(user);
+            this.socket.getOut().flush();
 
             //обратиться к БД и, если пользователь с таким именем есть, идти дальше, иначе ОСТАНОВ
             //обратиться к БД и взять соль, зашифрованный пароль+логин+соль
             //дешифровать приватным ключом с сервера полученное ранее сообщение (пароль+логин+соль), перевести это в строку
             //зашифровать введённый пользователем соль+логин+пароль публичным ключом из файла
             //сравнить 2 строки
-            SQLConnection dbConnection = new SQLConnection();
-            SqlResultCode usernameExistence = dbConnection.checkUsernameExistence(user);
-            if (usernameExistence == SqlResultCode.EXISTING_USERNAME) {
-                user.setPublicKey(KeyDistributor.getPublicKey());
-                user.setSalt(dbConnection.getSalt(user.getUsername()));
-            }
+            Object response = this.socket.getIn().readObject();
+
 
 
 

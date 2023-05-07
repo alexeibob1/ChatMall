@@ -1,13 +1,8 @@
 package com.networkchat.server;
 
-import com.networkchat.client.ClientHandler;
-import com.networkchat.sql.SQLConnection;
-
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.SQLException;
 
 public class Server {
     private ServerSocket serverSocket;

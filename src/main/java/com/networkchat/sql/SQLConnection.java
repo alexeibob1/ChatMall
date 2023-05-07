@@ -2,14 +2,33 @@ package com.networkchat.sql;
 
 
 import com.networkchat.client.User;
+import com.networkchat.security.AuthDataEncryptor;
+import com.networkchat.smtp.SSLEmail;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.*;
+import java.util.Base64;
 
 public class SQLConnection {
     private Connection connection;
     private final String DB_ADDRESS = "jdbc:mysql://localhost:3306/chatmall";
     private final String ADMIN_USERNAME = "root";
     private final String ADMIN_PASSWORD = "";
+
+    //SQL Queries
+    //private final String safePrivateKeyQuery = "INSERT INTO `private_keys` (username, rsa_key) VALUES (?, ?)";
+    private final String safeNewUserQuery = "INSERT INTO `users_auth` (username, email, salt, password, enabled) " +
+                                            "VALUES (?, ?, ?, ?, ?)";
+
+    private final String safeConfirmationCodeQuery = "INSERT INTO `registration_codes` (user_id, code)" +
+                                                     "VALUES ((SELECT user_id FROM `users_auth` WHERE username=?), ?)";
+    private final String checkUsernameExistenceQuery = "SELECT * FROM `users_auth` WHERE username=? LIMIT 1";
+
+    private final String checkEmailExistenceQuery = "SELECT * FROM `users_auth` WHERE email=? LIMIT 1";
+
     public SQLConnection() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         this.connection = DriverManager.getConnection(DB_ADDRESS, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -22,7 +41,7 @@ public class SQLConnection {
         }
 
         //check for existing email
-        try (PreparedStatement stmt = this.connection.prepareStatement("SELECT * FROM users_auth WHERE email=? LIMIT 1")) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(checkEmailExistenceQuery)) {
             stmt.setString(1, user.getEmail());
             ResultSet resultSet = stmt.executeQuery();
             if (resultSet.isBeforeFirst()) {
@@ -36,32 +55,49 @@ public class SQLConnection {
         return SqlResultCode.SUCCESS;
     }
 
-    public void sendConfirmationCode() {
-
+    public void sendConfirmationCode(User user) throws NoSuchAlgorithmException {
+        String hash = generateVerificationCode();
+        SSLEmail emailConnection = new SSLEmail(user);
+        emailConnection.sendConfirmationMessage(hash);
+        safeConfirmationCode(hash, user);
     }
 
-    public void safePrivateKey(String key, String username) {
-        try (PreparedStatement stmt = this.connection.prepareStatement(
-                "INSERT INTO `private_keys` (username, rsa_key) VALUES (?, ?)")) {
-            stmt.setString(1, username);
-            stmt.setString(2, key);
+    private void safeConfirmationCode(String hash, User user) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(safeConfirmationCodeQuery)) {
+            stmt.setString(1, user.getUsername());
+            stmt.setString(2, hash);
             stmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private String generateVerificationCode() throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        SecureRandom random = new SecureRandom();
+        byte[] byteCode = new byte[8];
+        random.nextBytes(byteCode);
+        byte[] encodedHash = digest.digest(Base64.getEncoder().encodeToString(byteCode).getBytes(StandardCharsets.UTF_8));
+        return AuthDataEncryptor.bytesToHex(encodedHash);
+    }
+
+//    public void safePrivateKey(String key, String username) {
+//        try (PreparedStatement stmt = this.connection.prepareStatement(safePrivateKeyQuery)) {
+//            stmt.setString(1, username);
+//            stmt.setString(2, key);
+//            stmt.executeUpdate();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+
     public void safeUserData(User user) {
-        try (PreparedStatement stmt = this.connection.prepareStatement(
-                "INSERT INTO `users_auth` (user_id, email, salt, password, time_stamp, enabled) " +
-                        "VALUES ((SELECT k.user_id FROM `private_keys` k WHERE k.username = ?), ?, ?, ?, ?, ?)"
-        )) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(safeNewUserQuery)) {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getEmail());
             stmt.setString(3, user.getSalt());
             stmt.setString(4, user.getEncryptedData());
-            stmt.setTimestamp(5, Timestamp.valueOf(user.getTimeStamp()));
-            stmt.setByte(6, (byte) 0);
+            stmt.setByte(5, (byte) 0);
             stmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,7 +105,7 @@ public class SQLConnection {
     }
 
     public SqlResultCode checkUsernameExistence(User user) {
-        try (PreparedStatement stmt = this.connection.prepareStatement("SELECT * FROM private_keys WHERE username=? LIMIT 1")) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(checkUsernameExistenceQuery)) {
             stmt.setString(1, user.getUsername());
             ResultSet resultSet = stmt.executeQuery();
             if (resultSet.isBeforeFirst()) {
@@ -84,5 +120,10 @@ public class SQLConnection {
 
     public String getSalt(String username) {
         return "";
+
+    }
+
+    public void close() throws SQLException {
+        this.connection.close();
     }
 }

@@ -1,42 +1,48 @@
 package com.networkchat.smtp;
 
+import com.networkchat.client.User;
+
 import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import java.util.Properties;
 
 public class SSLEmail {
+    private final String fromEmail = "fingerloom2004@gmail.com";
+    private final String password = "eprxzfqggxyfjsqz";
+    private final String subject = "Please verify your registration";
+    private User user;
+    private String content = "Dear [[name]],\n"
+            + "Please enter the code below in the application to verify your registration:\n\n"
+            + "[[code]]\n\n"
+            + "Thank you,\n"
+            + "Team of ChatMall application.";
 
-    /**
-     Outgoing Mail (SMTP) Server
-     requires TLS or SSL: smtp.gmail.com (use authentication)
-     Use Authentication: Yes
-     Port for SSL: 465
-     */
-    public static void main(String[] args) {
-        final String fromEmail = "fingerloom2004@gmail.com"; //requires valid gmail id
-        final String password = "eprxzfqggxyfjsqz"; // correct password for gmail id
-        final String toEmail = "kr.vadim29@gmail.com\n"; // can be any email id
+    public SSLEmail(User user) {
+        this.user = user;
+    }
 
-        System.out.println("SSLEmail Start");
+    public void sendConfirmationMessage(String code) {
         Properties props = new Properties();
-        props.put("mail.smtp.host", "smtp.gmail.com"); //SMTP Host
-        props.put("mail.smtp.socketFactory.port", "465"); //SSL Port
-        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory"); //SSL Factory Class
-        props.put("mail.smtp.auth", "true"); //Enabling SMTP Authentication
-        props.put("mail.smtp.port", "465"); //SMTP Port
-
+        initProperties(props);
         Authenticator auth = new Authenticator() {
-            //override the getPasswordAuthentication method
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(fromEmail, password);
             }
         };
 
-        Session session = Session.getDefaultInstance(props, auth);
-        System.out.println("Session created");
-        EmailUtil.sendEmail(session, toEmail,"Проверка связи", "Проверка связи в связи со смненой пароля");
+        content = content.replace("[[name]]", user.getUsername());
+        content = content.replace("[[code]]", code);
 
+        Session session = Session.getDefaultInstance(props, auth);
+        EmailUtil.sendEmail(session, this.user.getEmail(), subject, content);
     }
 
+    private void initProperties(Properties props) {
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.socketFactory.port", "465");
+        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.port", "465");
+    }
 }
