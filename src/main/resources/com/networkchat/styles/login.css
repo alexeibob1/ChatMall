@@ -2,7 +2,27 @@
     -fx-font-family: Roboto;
     -fx-font-weight: bold;
     -fx-font-size: 40px;
-    -fx-color: white;
+    -fx-text-fill: white;
+}
+
+#lCodeSent {
+    -fx-font-family: Roboto;
+    -fx-font-weight: bold;
+    -fx-font-size: 25px;
+    -fx-text-fill: white;
+}
+
+#lCheckInbox {
+    -fx-font-family: Roboto;
+    -fx-font-size: 17px;
+    -fx-text-fill: white;
+}
+
+#lValidTime {
+    -fx-font-family: Roboto;
+    -fx-font-weight: bold;
+    -fx-font-size: 20px;
+    -fx-text-fill: white;
 }
 
 #bckgLogin {
@@ -14,7 +34,7 @@
     -fx-effect: dropshadow(three-pass-box, #FFFFFF, 5, 0, 0, 0);
 }
 
-#eUsername, #ePassword, #eEmail {
+#eUsername, #ePassword, #eEmail, #eConfirmationCode {
     -fx-font-family: Roboto;
     -fx-font-size: 15px;
     -fx-background-color: white;
@@ -23,11 +43,11 @@
     -fx-prompt-text-fill: #090979;
 }
 
-#eUsername:focused, #ePassword:focused, #eEmail:focused {
+#eUsername:focused, #ePassword:focused, #eEmail:focused, #eConfirmationCode:focused {
     -fx-effect: innershadow(three-pass-box, #000000, 4, 0, 0, 0);
 }
 
-#btnLogin, #btnSignUp {
+#btnLogin, #btnSignUp, #btnConfirm {
     -fx-background-color: #D6B036;
     -fx-background-radius: 10px;
     -fx-text-fill: white;
@@ -36,7 +56,7 @@
     -fx-font-weight: bold;
 }
 
-#btnLogin:hover, #btnSignUp:hover {
+#btnLogin:hover, #btnSignUp:hover, #btnConfirm:hover {
     -fx-effect: innershadow(three-pass-box, #000000, 4, 0, 0, 0);
     -fx-cursor: hand;
 }

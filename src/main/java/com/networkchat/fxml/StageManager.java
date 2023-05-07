@@ -45,6 +45,7 @@ public class StageManager {
         Scene scene = this.primaryStage.getScene();
         scene.setRoot(root);
         scene.getWindow().sizeToScene();
+        this.primaryStage.centerOnScreen();
         this.primaryStage.setScene(scene);
         initController(socket);
         this.primaryStage.show();

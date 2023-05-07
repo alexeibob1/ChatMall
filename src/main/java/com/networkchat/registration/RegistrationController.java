@@ -107,7 +107,7 @@ public class RegistrationController implements Controllable {
                         eEmail.setStyle(eUsername.getStyle() + errorStyle);
                     }
                     case SUCCESS -> {
-
+                        stageManager.switchScene(FxmlView.CONFIRMATION, this.socket);
                     }
                 }
             }

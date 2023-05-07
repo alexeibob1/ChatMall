@@ -2,6 +2,7 @@ package com.networkchat.resources;
 
 import com.networkchat.fxml.StageManager;
 import com.networkchat.login.LoginController;
+import com.networkchat.registration.ConfirmationController;
 import com.networkchat.registration.RegistrationController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -59,6 +60,38 @@ public enum FxmlView {
         @Override
         public Class<?> getControllerClass() {
             return RegistrationController.class;
+        }
+
+        @Override
+        public FXMLLoader getFxmlLoader() {
+            return fxmlLoader;
+        }
+
+        @Override
+        public Parent getRoot() {
+            return this.root;
+        }
+    },
+
+    CONFIRMATION {
+        private static final FXMLLoader fxmlLoader = new FXMLLoader(StageManager.class.getResource("/com/networkchat/fxml/confirmation-form.fxml"));
+        private static final Parent root;
+
+        static {
+            try {
+                root = fxmlLoader.load();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        @Override
+        public String getFxmlFile() {
+            return "/com/networkchat/fxml/confirmation-form.fxml";
+        }
+
+        @Override
+        public Class<?> getControllerClass() {
+            return ConfirmationController.class;
         }
 
         @Override
