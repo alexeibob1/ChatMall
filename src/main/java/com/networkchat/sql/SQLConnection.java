@@ -42,6 +42,8 @@ public class SQLConnection {
 
     private final String checkUserPassword = "SELECT * FROM `users_auth` WHERE username=? AND password=? LIMIT 1";
 
+    private final String getEmailQuery = "SELECT email FROM `users_auth` WHERE username=?";
+
     public SQLConnection() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         this.connection = DriverManager.getConnection(DB_ADDRESS, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -90,16 +92,6 @@ public class SQLConnection {
         return String.valueOf(random.nextInt(100000, 999999));
     }
 
-//    public void safePrivateKey(String key, String username) {
-//        try (PreparedStatement stmt = this.connection.prepareStatement(safePrivateKeyQuery)) {
-//            stmt.setString(1, username);
-//            stmt.setString(2, key);
-//            stmt.executeUpdate();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-
     public void safeUserData(User user) {
         try (PreparedStatement stmt = this.connection.prepareStatement(safeNewUserQuery)) {
             stmt.setString(1, user.getUsername());
@@ -125,6 +117,18 @@ public class SQLConnection {
         }
 
         return SqlResultCode.NOT_EXISTING_USERNAME;
+    }
+
+    public String getEmail(String username) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(getEmailQuery)) {
+            stmt.setString(1, username);
+            ResultSet resultSet = stmt.executeQuery();
+            resultSet.next();
+            return resultSet.getString("email");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     public SqlResultCode checkConfirmationCode(User user) {
@@ -177,21 +181,19 @@ public class SQLConnection {
     public SqlResultCode checkPermission(User user) throws NoSuchAlgorithmException {
         if (checkUsernameExistence(user) == SqlResultCode.EXISTING_USERNAME) {
             int userStatus = getUserStatus(user.getUsername());
-            if (userStatus == 1) {
-                String salt = getSalt(user.getUsername());
-                String hashedData = AuthDataEncryptor.encryptLoginData(salt, user.getUsername(), user.getPassword());
-                try (PreparedStatement stmt = this.connection.prepareStatement(checkUserPassword)) {
-                    stmt.setString(1, user.getUsername());
-                    stmt.setString(2, hashedData);
-                    ResultSet resultSet = stmt.executeQuery();
-                    if (resultSet.isBeforeFirst()) {
-                        return SqlResultCode.ALLOW_LOGIN;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+            String salt = getSalt(user.getUsername());
+            String hashedData = AuthDataEncryptor.encryptLoginData(salt, user.getUsername(), user.getPassword());
+            try (PreparedStatement stmt = this.connection.prepareStatement(checkUserPassword)) {
+                stmt.setString(1, user.getUsername());
+                stmt.setString(2, hashedData);
+                ResultSet resultSet = stmt.executeQuery();
+                if (resultSet.isBeforeFirst() && userStatus == 1) {
+                    return SqlResultCode.ALLOW_LOGIN;
+                } else if (resultSet.isBeforeFirst() && userStatus == 0) {
+                    return SqlResultCode.NOT_CONFIRMED;
                 }
-            } else if (userStatus == 0) {
-                return SqlResultCode.NOT_CONFIRMED;
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 

@@ -111,7 +111,7 @@ public class LoginController implements Controllable {
         try {
             User user = new User(eUsername.getText(), ePassword.getText());
             user.setRequest(ClientRequest.LOGIN);
-            this.socket.getOut().writeObject(user);
+            this.socket.getOut().writeUnshared(user);
             this.socket.getOut().flush();
 
             Object response = this.socket.getIn().readObject();
@@ -126,7 +126,9 @@ public class LoginController implements Controllable {
                         System.out.println("Incorrect authentication data.");
                     }
                     case NOT_CONFIRMED -> {
-                        System.out.println("Confirm your account.");
+                        user.setPassword("");
+                        user.setEmail("");
+                        stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, user);
                     }
                 }
             }

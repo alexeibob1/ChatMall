@@ -71,6 +71,9 @@ public class ClientHandler implements Runnable {
                         dbConnection.close();
                     } case CONFIRM_REGISTRATION -> {
                         SQLConnection dbConnection = new SQLConnection();
+                        if (user.getEmail() == "") {
+                            user.setEmail(dbConnection.getEmail(user.getUsername()));
+                        }
                         SqlResultCode codeCorrectness = dbConnection.checkConfirmationCode(user);
                         out.writeObject(codeCorrectness);
                         out.flush();
