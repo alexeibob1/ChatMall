@@ -30,11 +30,17 @@ public class SQLConnection {
     private final String checkEmailExistenceQuery = "SELECT * FROM `users_auth` WHERE email=? LIMIT 1";
 
     private final String checkConfirmationCodeQuery = "SELECT user_id FROM `registration_codes` WHERE code=? AND user_id=(" +
-            "SELECT user_id FROM `users_auth` WHERE username=?)";
+            "SELECT user_id FROM `users_auth` WHERE username=? LIMIT 1)";
 
     private final String updateUserStatusQuery = "UPDATE `users_auth` SET enabled=1 WHERE username=?";
     private final String deleteConfirmationCodeQuery = "DELETE FROM `registration_codes` WHERE user_id=(" +
-            "SELECT user_id FROM `users_auth` WHERE username=?)";
+            "SELECT user_id FROM `users_auth` WHERE username=? LIMIT 1)";
+
+    private final String getSaltQuery = "SELECT salt FROM `users_auth` WHERE username=? LIMIT 1";
+
+    private final String getUserStatusQuery = "SELECT enabled FROM `users_auth` WHERE username=? LIMIT 1";
+
+    private final String checkUserPassword = "SELECT * FROM `users_auth` WHERE username=? AND password=? LIMIT 1";
 
     public SQLConnection() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.cj.jdbc.Driver");
@@ -62,7 +68,7 @@ public class SQLConnection {
         return SqlResultCode.SUCCESS;
     }
 
-    public void sendConfirmationCode(User user) throws NoSuchAlgorithmException {
+    public void sendConfirmationCode(User user) {
         String hash = generateVerificationCode();
         SSLEmail emailConnection = new SSLEmail(user);
         emailConnection.sendConfirmationMessage(hash);
@@ -82,11 +88,6 @@ public class SQLConnection {
     private String generateVerificationCode() {
         SecureRandom random = new SecureRandom();
         return String.valueOf(random.nextInt(100000, 999999));
-        //        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-//        byte[] byteCode = new byte[8];
-        //random.nextBytes(byteCode);
-        //byte[] encodedHash = digest.digest(Base64.getEncoder().encodeToString(byteCode).getBytes(StandardCharsets.UTF_8));
-        //return AuthDataEncryptor.bytesToHex(encodedHash);
     }
 
 //    public void safePrivateKey(String key, String username) {
@@ -149,9 +150,52 @@ public class SQLConnection {
         return SqlResultCode.WRONG_CODE;
     }
 
-    public String getSalt(String username) {
-        return "";
+    public int getUserStatus(String username) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(getUserStatusQuery)) {
+            stmt.setString(1, username);
+            ResultSet resultSet = stmt.executeQuery();
+            resultSet.next();
+            return resultSet.getByte("enabled");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
 
+    public String getSalt(String username) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(getSaltQuery)) {
+            stmt.setString(1, username);
+            ResultSet resultSet = stmt.executeQuery();
+            resultSet.next();
+            return resultSet.getString(1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public SqlResultCode checkPermission(User user) throws NoSuchAlgorithmException {
+        if (checkUsernameExistence(user) == SqlResultCode.EXISTING_USERNAME) {
+            int userStatus = getUserStatus(user.getUsername());
+            if (userStatus == 1) {
+                String salt = getSalt(user.getUsername());
+                String hashedData = AuthDataEncryptor.encryptLoginData(salt, user.getUsername(), user.getPassword());
+                try (PreparedStatement stmt = this.connection.prepareStatement(checkUserPassword)) {
+                    stmt.setString(1, user.getUsername());
+                    stmt.setString(2, hashedData);
+                    ResultSet resultSet = stmt.executeQuery();
+                    if (resultSet.isBeforeFirst()) {
+                        return SqlResultCode.ALLOW_LOGIN;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else if (userStatus == 0) {
+                return SqlResultCode.NOT_CONFIRMED;
+            }
+        }
+
+        return SqlResultCode.ACCESS_DENIED;
     }
 
     public void close() throws SQLException {

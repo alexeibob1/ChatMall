@@ -23,6 +23,13 @@ public class AuthDataEncryptor {
         user.setEncryptedData(bytesToHex(hash));
     }
 
+    public static String encryptLoginData(String salt, String username, String password) throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        String message = salt + username + password;
+        byte[] hash = digest.digest(message.getBytes(StandardCharsets.UTF_8));
+        return bytesToHex(hash);
+    }
+
     public static void encryptLoginData(User user) throws NoSuchPaddingException, NoSuchAlgorithmException {
         Cipher encryptCipher = Cipher.getInstance("RSA");
 

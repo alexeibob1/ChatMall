@@ -52,10 +52,21 @@ public class ClientHandler implements Runnable {
                         dbConnection.close();
                     } case LOGIN -> {
                         SQLConnection dbConnection = new SQLConnection();
-                        SqlResultCode usernameExistence = dbConnection.checkUsernameExistence(user);
-                        if (usernameExistence == SqlResultCode.EXISTING_USERNAME) {
-                            String salt = dbConnection.getSalt(user.getUsername());
-                            PublicKey publicKey = KeyDistributor.getPublicKey();
+
+                        SqlResultCode accessPermission = dbConnection.checkPermission(user);
+                        switch (accessPermission) {
+                            case ACCESS_DENIED -> {
+                                out.writeObject(SqlResultCode.ACCESS_DENIED);
+                                out.flush();
+                            }
+                            case NOT_CONFIRMED -> {
+                                out.writeObject(SqlResultCode.NOT_CONFIRMED);
+                                out.flush();
+                            }
+                            case ALLOW_LOGIN -> {
+                                out.writeObject(SqlResultCode.ALLOW_LOGIN);
+                                out.flush();
+                            }
                         }
                         dbConnection.close();
                     } case CONFIRM_REGISTRATION -> {

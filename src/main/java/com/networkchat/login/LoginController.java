@@ -12,6 +12,7 @@ import com.networkchat.sql.SQLConnection;
 import com.networkchat.sql.SqlResultCode;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -113,16 +114,22 @@ public class LoginController implements Controllable {
             this.socket.getOut().writeObject(user);
             this.socket.getOut().flush();
 
-            //обратиться к БД и, если пользователь с таким именем есть, идти дальше, иначе ОСТАНОВ
-            //обратиться к БД и взять соль, зашифрованный пароль+логин+соль
-            //дешифровать приватным ключом с сервера полученное ранее сообщение (пароль+логин+соль), перевести это в строку
-            //зашифровать введённый пользователем соль+логин+пароль публичным ключом из файла
-            //сравнить 2 строки
             Object response = this.socket.getIn().readObject();
 
-
-
-
+            if (response.getClass() == SqlResultCode.class) {
+                SqlResultCode resultCode = (SqlResultCode) response;
+                switch (resultCode) {
+                    case ALLOW_LOGIN -> {
+                        System.out.println("Access allowed");
+                    }
+                    case ACCESS_DENIED -> {
+                        System.out.println("Incorrect authentication data.");
+                    }
+                    case NOT_CONFIRMED -> {
+                        System.out.println("Confirm your account.");
+                    }
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
