@@ -2,9 +2,12 @@ package com.networkchat.registration;
 
 import com.networkchat.ChatApplication;
 import com.networkchat.client.ClientSocket;
+import com.networkchat.client.User;
 import com.networkchat.fxml.Controllable;
 import com.networkchat.fxml.StageManager;
 import com.networkchat.resources.FxmlView;
+import com.networkchat.server.ClientRequest;
+import com.networkchat.sql.SqlResultCode;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -45,15 +48,35 @@ public class ConfirmationController implements Controllable {
 
     StageManager stageManager;
     ClientSocket socket;
+    User user;
 
     @FXML
     void onBtnCloseClicked(MouseEvent event) {
-        stageManager.switchScene(FxmlView.LOGIN, this.socket);
+        stageManager.switchScene(FxmlView.LOGIN, this.socket, null);
     }
 
     @FXML
     void onBtnConfirmClicked(MouseEvent event) {
+        try {
+            user.setRequest(ClientRequest.CONFIRM_REGISTRATION);
+            user.setPassword("");
+            user.setConfirmationCode(eConfirmationCode.getText());
+            this.socket.getOut().writeUnshared(user);
+            this.socket.getOut().flush();
 
+            Object response = this.socket.getIn().readObject();
+
+            if (response.getClass() == SqlResultCode.class) {
+                SqlResultCode resultCode = (SqlResultCode) response;
+                if (resultCode == SqlResultCode.WRONG_CODE) {
+                    System.err.println("WRONG CODE!");
+                } else if (resultCode == SqlResultCode.CORRECT_CODE) {
+                    System.out.println("CORRECT CODE!");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -74,6 +97,11 @@ public class ConfirmationController implements Controllable {
     @Override
     public void setSocket(ClientSocket socket) {
         this.socket = socket;
+    }
+
+    @Override
+    public void setUser(User user) {
+        this.user = user;
     }
 
     @Override

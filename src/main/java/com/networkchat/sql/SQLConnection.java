@@ -29,6 +29,13 @@ public class SQLConnection {
 
     private final String checkEmailExistenceQuery = "SELECT * FROM `users_auth` WHERE email=? LIMIT 1";
 
+    private final String checkConfirmationCodeQuery = "SELECT user_id FROM `registration_codes` WHERE code=? AND user_id=(" +
+            "SELECT user_id FROM `users_auth` WHERE username=?)";
+
+    private final String updateUserStatusQuery = "UPDATE `users_auth` SET enabled=1 WHERE username=?";
+    private final String deleteConfirmationCodeQuery = "DELETE FROM `registration_codes` WHERE user_id=(" +
+            "SELECT user_id FROM `users_auth` WHERE username=?)";
+
     public SQLConnection() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.cj.jdbc.Driver");
         this.connection = DriverManager.getConnection(DB_ADDRESS, ADMIN_USERNAME, ADMIN_PASSWORD);
@@ -116,6 +123,29 @@ public class SQLConnection {
         }
 
         return SqlResultCode.NOT_EXISTING_USERNAME;
+    }
+
+    public SqlResultCode checkConfirmationCode(User user) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(checkConfirmationCodeQuery)) {
+            stmt.setString(1, user.getConfirmationCode());
+            stmt.setString(2, user.getUsername());
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.isBeforeFirst()) {
+                try (PreparedStatement updStmt = this.connection.prepareStatement(updateUserStatusQuery)) {
+                    updStmt.setString(1, user.getUsername());
+                    updStmt.executeUpdate();
+                }
+                try (PreparedStatement dltStmt = this.connection.prepareStatement(deleteConfirmationCodeQuery)) {
+                    dltStmt.setString(1, user.getUsername());
+                    dltStmt.executeUpdate();
+                }
+                return SqlResultCode.CORRECT_CODE;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return SqlResultCode.WRONG_CODE;
     }
 
     public String getSalt(String username) {

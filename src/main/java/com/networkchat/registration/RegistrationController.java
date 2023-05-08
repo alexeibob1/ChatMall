@@ -61,6 +61,8 @@ public class RegistrationController implements Controllable {
 
     Stage stage;
 
+    User user;
+
     StageManager stageManager;
     ClientSocket socket;
 
@@ -81,16 +83,16 @@ public class RegistrationController implements Controllable {
 
     @FXML
     void onBtnSignInClicked(MouseEvent event) {
-        this.stageManager.switchScene(FxmlView.LOGIN, this.socket);
+        this.stageManager.switchScene(FxmlView.LOGIN, this.socket, null);
     }
 
     @FXML
     void onBtnSignUpClicked(MouseEvent event) {
         removeTooltips();
         try {
-            User user = new User(eUsername.getText(), eEmail.getText(), ePassword.getText(), LocalDateTime.now());
+            User user = new User(eUsername.getText(), eEmail.getText(), ePassword.getText());
             user.setRequest(ClientRequest.REGISTER);
-            this.socket.getOut().writeObject(user);
+            this.socket.getOut().writeUnshared(user);
             this.socket.getOut().flush();
 
             Object response = this.socket.getIn().readObject();
@@ -107,11 +109,10 @@ public class RegistrationController implements Controllable {
                         eEmail.setStyle(eUsername.getStyle() + errorStyle);
                     }
                     case SUCCESS -> {
-                        stageManager.switchScene(FxmlView.CONFIRMATION, this.socket);
+                        stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, user);
                     }
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -136,6 +137,11 @@ public class RegistrationController implements Controllable {
     @Override
     public void setSocket(ClientSocket socket) {
         this.socket = socket;
+    }
+
+    @Override
+    public void setUser(User user) {
+        this.user = user;
     }
 
     @Override

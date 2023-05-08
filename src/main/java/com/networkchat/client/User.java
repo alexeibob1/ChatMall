@@ -18,16 +18,15 @@ public class User implements Serializable {
 
     private String salt;
 
-    private LocalDateTime timeStamp;
     private boolean enabled;
 
     private String encryptedData;
+    private String confirmationCode;
 
-    public User(String username, String email, String password, LocalDateTime timeStamp) {
+    public User(String username, String email, String password) {
         this.username = username;
         this.email = email;
         this.password = password;
-        this.timeStamp = timeStamp;
         this.enabled = false;
     }
 
@@ -70,13 +69,6 @@ public class User implements Serializable {
         return this.salt;
     }
 
-    public LocalDateTime getTimeStamp() {
-        return timeStamp;
-    }
-
-    public void setTimeStamp(LocalDateTime timeStamp) {
-        this.timeStamp = timeStamp;
-    }
 
     public boolean isEnabled() {
         return enabled;
@@ -108,5 +100,13 @@ public class User implements Serializable {
 
     public void setRequest(ClientRequest request) {
         this.request = request;
+    }
+
+    public String getConfirmationCode() {
+        return confirmationCode;
+    }
+
+    public void setConfirmationCode(String confirmationCode) {
+        this.confirmationCode = confirmationCode;
     }
 }

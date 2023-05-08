@@ -1,6 +1,7 @@
 package com.networkchat.fxml;
 
 import com.networkchat.client.ClientSocket;
+import com.networkchat.client.User;
 import com.networkchat.resources.FxmlView;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -36,26 +37,28 @@ public class StageManager {
         this.primaryStage.setScene(new Scene(initForm.getRoot()));
     }
 
-    public void switchScene(FxmlView formType, ClientSocket socket) {
+
+    public void switchScene(FxmlView formType, ClientSocket socket, User user) {
         this.fxmlLoader = formType.getFxmlLoader();
-        show(formType.getRoot(), socket);
+        show(formType.getRoot(), socket, user);
     }
 
-    private void show(Parent root, ClientSocket socket) {
+    private void show(Parent root, ClientSocket socket, User user) {
         Scene scene = this.primaryStage.getScene();
         scene.setRoot(root);
         scene.getWindow().sizeToScene();
         this.primaryStage.centerOnScreen();
         this.primaryStage.setScene(scene);
-        initController(socket);
+        initController(socket, user);
         this.primaryStage.show();
     }
 
-    private void initController(ClientSocket socket) {
+    private void initController(ClientSocket socket, User user) {
         Controllable controller = this.fxmlLoader.getController();
         controller.setStage(this.primaryStage);
         controller.setStageManager(this);
         controller.setSocket(socket);
+        controller.setUser(user);
         controller.init();
     }
 

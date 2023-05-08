@@ -46,6 +46,7 @@ public class LoginController implements Controllable {
     Stage stage;
     StageManager stageManager;
     ClientSocket socket;
+    User user;
 
     @FXML
     void onBtnCloseClicked(MouseEvent event) {
@@ -69,7 +70,7 @@ public class LoginController implements Controllable {
 
     @FXML
     void onRegisterBtnClicked(MouseEvent event) {
-        this.stageManager.switchScene(FxmlView.REGISTRATION, this.socket);
+        this.stageManager.switchScene(FxmlView.REGISTRATION, this.socket, null);
     }
 
     @Override
@@ -85,6 +86,11 @@ public class LoginController implements Controllable {
     @Override
     public void setSocket(ClientSocket socket) {
         this.socket = socket;
+    }
+
+    @Override
+    public void setUser(User user) {
+        this.user = user;
     }
 
     @Override

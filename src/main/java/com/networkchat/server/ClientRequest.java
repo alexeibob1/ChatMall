@@ -1,5 +1,5 @@
 package com.networkchat.server;
 
 public enum ClientRequest {
-    LOGIN, REGISTER
+    LOGIN, REGISTER, CONFIRM_REGISTRATION
 }

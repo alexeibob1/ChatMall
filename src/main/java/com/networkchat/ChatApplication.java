@@ -20,7 +20,7 @@ public class ChatApplication extends Application {
             stage.setResizable(false);
 
             StageManager stageManager = new StageManager(stage, FxmlView.LOGIN);
-            stageManager.switchScene(FxmlView.LOGIN, socket);
+            stageManager.switchScene(FxmlView.LOGIN, socket, null);
         } catch (Exception e) {
             System.err.println("Can't connect to server.");
         }

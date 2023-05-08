@@ -21,7 +21,6 @@ public class ClientHandler implements Runnable {
 
     public ClientHandler(Socket socket) throws IOException, SQLException, ClassNotFoundException {
         this.socket = socket;
-
     }
 
     public void run() {
@@ -45,9 +44,9 @@ public class ClientHandler implements Runnable {
                             case SUCCESS -> {
                                 AuthDataEncryptor.encryptRegistrationData(user);
                                 dbConnection.safeUserData(user);
-                                dbConnection.sendConfirmationCode(user);
                                 out.writeObject(SqlResultCode.SUCCESS);
                                 out.flush();
+                                dbConnection.sendConfirmationCode(user);
                             }
                         }
                         dbConnection.close();
@@ -58,6 +57,12 @@ public class ClientHandler implements Runnable {
                             String salt = dbConnection.getSalt(user.getUsername());
                             PublicKey publicKey = KeyDistributor.getPublicKey();
                         }
+                        dbConnection.close();
+                    } case CONFIRM_REGISTRATION -> {
+                        SQLConnection dbConnection = new SQLConnection();
+                        SqlResultCode codeCorrectness = dbConnection.checkConfirmationCode(user);
+                        out.writeObject(codeCorrectness);
+                        out.flush();
                         dbConnection.close();
                     }
                 }
