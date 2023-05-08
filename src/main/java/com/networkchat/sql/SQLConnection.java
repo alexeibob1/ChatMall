@@ -79,13 +79,14 @@ public class SQLConnection {
         }
     }
 
-    private String generateVerificationCode() throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    private String generateVerificationCode() {
         SecureRandom random = new SecureRandom();
-        byte[] byteCode = new byte[8];
-        random.nextBytes(byteCode);
-        byte[] encodedHash = digest.digest(Base64.getEncoder().encodeToString(byteCode).getBytes(StandardCharsets.UTF_8));
-        return AuthDataEncryptor.bytesToHex(encodedHash);
+        return String.valueOf(random.nextInt(100000, 999999));
+        //        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+//        byte[] byteCode = new byte[8];
+        //random.nextBytes(byteCode);
+        //byte[] encodedHash = digest.digest(Base64.getEncoder().encodeToString(byteCode).getBytes(StandardCharsets.UTF_8));
+        //return AuthDataEncryptor.bytesToHex(encodedHash);
     }
 
 //    public void safePrivateKey(String key, String username) {

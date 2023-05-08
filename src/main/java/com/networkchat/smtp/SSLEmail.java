@@ -15,7 +15,8 @@ public class SSLEmail {
     private String content = "Dear [[name]],\n"
             + "Please enter the code below in the application to verify your registration:\n\n"
             + "[[code]]\n\n"
-            + "Thank you,\n"
+            + "Remember, that this code is valid for 30 minutes.\n\n" +
+            "Thank you,\n"
             + "Team of ChatMall application.";
 
     public SSLEmail(User user) {

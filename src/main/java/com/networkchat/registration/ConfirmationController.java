@@ -44,6 +44,14 @@ public class ConfirmationController implements Controllable {
     @FXML
     private Label lValidTime;
 
+    private String errorStyle = "-fx-border-radius: 5px;\n" +
+            "-fx-border-color: red;\n" +
+            "-fx-border-width: 2px;";
+
+    private String correctStyle = "-fx-border-radius: 5px;\n" +
+            "-fx-border-color: green;\n" +
+            "-fx-border-width: 2px;";
+
     Stage stage;
 
     StageManager stageManager;
@@ -57,6 +65,7 @@ public class ConfirmationController implements Controllable {
 
     @FXML
     void onBtnConfirmClicked(MouseEvent event) {
+        eConfirmationCode.setStyle(eConfirmationCode.getStyle().replaceAll(errorStyle, ""));
         try {
             user.setRequest(ClientRequest.CONFIRM_REGISTRATION);
             user.setPassword("");
@@ -69,9 +78,9 @@ public class ConfirmationController implements Controllable {
             if (response.getClass() == SqlResultCode.class) {
                 SqlResultCode resultCode = (SqlResultCode) response;
                 if (resultCode == SqlResultCode.WRONG_CODE) {
-                    System.err.println("WRONG CODE!");
+                    eConfirmationCode.setStyle(eConfirmationCode.getStyle() + errorStyle);
                 } else if (resultCode == SqlResultCode.CORRECT_CODE) {
-                    System.out.println("CORRECT CODE!");
+                    stageManager.switchScene(FxmlView.LOGIN, this.socket, null);
                 }
             }
         } catch (Exception e) {
@@ -109,5 +118,7 @@ public class ConfirmationController implements Controllable {
         Scene scene = this.stage.getScene();
         scene.getStylesheets().add(ChatApplication.class.getResource("styles/login.css").toExternalForm());
         eConfirmationCode.setText("");
+        eConfirmationCode.setStyle(eConfirmationCode.getStyle().replaceAll(errorStyle, ""));
+        eConfirmationCode.setStyle(eConfirmationCode.getStyle().replaceAll(correctStyle, ""));
     }
 }

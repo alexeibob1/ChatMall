@@ -4,9 +4,6 @@ import com.networkchat.server.ClientRequest;
 
 import java.io.Serializable;
 import java.security.PublicKey;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Date;
 
 public class User implements Serializable {
     private ClientRequest request;
