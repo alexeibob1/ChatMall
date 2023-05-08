@@ -194,6 +194,7 @@ public class SQLConnection {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                SSLSo
             }
         }
 

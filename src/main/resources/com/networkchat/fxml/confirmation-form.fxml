@@ -1,16 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
 
-
-<AnchorPane fx:id="bckgLogin" prefHeight="340.0" prefWidth="559.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.networkchat.registration.ConfirmationController">
+<AnchorPane fx:id="bckgLogin" prefHeight="340.0" prefWidth="559.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.networkchat.registration.ConfirmationController">
    <children>
-      <Label fx:id="lCodeSent" layoutX="48.0" layoutY="47.0" prefHeight="49.0" prefWidth="487.0" text="Confirmation code was successfully sent!" textFill="WHITE" />
+      <Label fx:id="lCodeSent" layoutX="48.0" layoutY="47.0" prefHeight="49.0" prefWidth="487.0" text="Confirmation code was successfully sent!" />
       <Label fx:id="lCheckInbox" layoutX="24.0" layoutY="95.0" prefHeight="67.0" prefWidth="512.0" text="Check your inbox (and SPAM folder) and enter confirmation code in the field below." wrapText="true" />
       <ImageView fx:id="btnClose" fitHeight="25.0" fitWidth="25.0" layoutX="520.0" layoutY="14.0" onMouseClicked="#onBtnCloseClicked" pickOnBounds="true" preserveRatio="true">
          <image>
