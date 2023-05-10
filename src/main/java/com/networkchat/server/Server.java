@@ -1,8 +1,13 @@
 package com.networkchat.server;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 public class Server {
     private ServerSocket serverSocket;

@@ -3,7 +3,6 @@ package com.networkchat.security;
 import com.networkchat.client.User;
 import com.networkchat.sql.SQLConnection;
 
-import javax.crypto.Cipher;
 import java.io.*;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
@@ -11,13 +10,19 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class KeyDistributor {
-    public static void generateKeys(User user, SQLConnection dbConnection) throws NoSuchAlgorithmException {
+    public static void generateKeys(SQLConnection dbConnection, String connectionID) throws NoSuchAlgorithmException {
         KeyPair pair = getKeyPair();
-        safePublicKey(pair.getPublic(), user);
-        safePrivateKey(pair.getPrivate(), dbConnection, user);
+        safePrivateKey(pair.getPrivate(), dbConnection, connectionID);
     }
 
-    private static KeyPair getKeyPair() throws NoSuchAlgorithmException {
+    public static PublicKey generatePublicKey() throws NoSuchAlgorithmException {
+        //KeyPair pair = getKeyPair();
+        return getKeyPair().getPublic();
+        //byte[] keyBytes = pair.getPublic().getEncoded();
+        //return Base64.getEncoder().encodeToString(keyBytes);
+    }
+
+    public static KeyPair getKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);
         return generator.generateKeyPair();
@@ -32,10 +37,10 @@ public class KeyDistributor {
         }
     }
 
-    private static void safePrivateKey(PrivateKey key, SQLConnection dbConnection, User user) {
+    private static void safePrivateKey(PrivateKey key, SQLConnection dbConnection, String connectionID) {
         byte[] keyBytes = key.getEncoded();
         String strKey = Base64.getEncoder().encodeToString(keyBytes);
-        //dbConnection.safePrivateKey(strKey, user.getUsername());
+        dbConnection.safePublicKey(strKey, connectionID);
     }
 
     public static PublicKey getPublicKey() throws NoSuchAlgorithmException, InvalidKeySpecException {

@@ -5,12 +5,9 @@ import com.networkchat.client.User;
 import com.networkchat.security.AuthDataEncryptor;
 import com.networkchat.smtp.SSLEmail;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.*;
-import java.util.Base64;
 
 public class SQLConnection {
     private Connection connection;
@@ -43,6 +40,10 @@ public class SQLConnection {
     private final String checkUserPassword = "SELECT * FROM `users_auth` WHERE username=? AND password=? LIMIT 1";
 
     private final String getEmailQuery = "SELECT email FROM `users_auth` WHERE username=?";
+
+    private final String safePublicKeyQuery = "INSERT INTO `public_keys` (connection_id, rsa_key) VALUES (?, ?)";
+
+    private final String deletePublicKeyQuery = "DELETE FROM `public_keys` WHERE connection_id=?";
 
     public SQLConnection() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.cj.jdbc.Driver");
@@ -194,11 +195,29 @@ public class SQLConnection {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                SSLSo
             }
         }
 
         return SqlResultCode.ACCESS_DENIED;
+    }
+
+    public void safePublicKey(String connectionID, String key) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(safePublicKeyQuery)) {
+            stmt.setString(1, connectionID);
+            stmt.setString(2, key);
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deletePublicKey(String connectionID) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(deletePublicKeyQuery)) {
+            stmt.setString(1, connectionID);
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void close() throws SQLException {
