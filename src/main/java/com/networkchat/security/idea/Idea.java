@@ -7,18 +7,24 @@ import java.util.List;
 
 public class Idea {
 
-    private int keySize;
-    private int blockSize;
+    private final int keySize = 16;
+    private final int blockSize = 8;
+
+    private int[] encryptKeys = new int[52];
+    private int[] decryptKeys = new int[52];
+
+    private final String charToAdd = " ";
     public Idea() {
-        keySize = 16;
-        blockSize = 8;
         SecureRandom random = new SecureRandom();
         byte[] initVector = new byte[16];
         random.nextBytes(initVector);
         setKey(initVector);
     }
 
-    private final String charToAdd = " ";
+    public Idea(int[] encryptKeys, int[] decryptKeys) {
+        this.encryptKeys = encryptKeys;
+        this.decryptKeys = decryptKeys;
+    }
 
     public String decrypt(String text) {
         StringBuffer result = new StringBuffer();
@@ -91,10 +97,6 @@ public class Idea {
         return result.toString();
     }
 
-
-    private int[] encryptKeys = new int[52];
-    private int[] decryptKeys = new int[52];
-
     public int[] getEncryptKeys() {
         return encryptKeys;
     }
@@ -133,20 +135,14 @@ public class Idea {
         int k1, k2, j;
         int t1, t2, t3;
 
-        // Encryption keys. The first 8 key values come from the 16
-        // user-supplied key bytes.
         for (k1 = 0; k1 < 8; ++k1) {
             encryptKeys[k1] = ((key[2 * k1] & 0xff) << 8) | (key[2 * k1 + 1] & 0xff);
         }
 
-        // Subsequent key values are the previous values rotated to the
-        // left by 25 bits.
         for (; k1 < 52; ++k1) {
             encryptKeys[k1] = ((encryptKeys[k1 - 8] << 9) | (encryptKeys[k1 - 7] >>> 7)) & 0xffff;
         }
 
-        // Decryption keys. These are the encryption keys, inverted and
-        // in reverse order.
         k1 = 0;
         k2 = 51;
         t1 = mulinv(encryptKeys[k1++]);
@@ -279,6 +275,15 @@ public class Idea {
         for (int i = 0; i < shortLen; ++i) {
             outBytes[outOff + i * 2] = (byte) ((inShorts[inOff + i] >>> 8) & 0xff);
             outBytes[outOff + i * 2 + 1] = (byte) ((inShorts[inOff + i]) & 0xff);
+        }
+    }
+
+    public static void main(String[] args) {
+        Idea idea = new Idea();
+        String encrypted = idea.encrypt("Hello, world!");
+        String decrypted = idea.decrypt(encrypted);
+        if (encrypted.compareTo(decrypted) != 0) {
+            System.err.println("INVALID ENCRYPTION!");
         }
     }
 

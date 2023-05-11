@@ -10,5 +10,9 @@ public interface Controllable {
     void setSocket(ClientSocket socket);
 
     void setUsername(String username);
+
+    void setEncryptKey(int[] encryptKey);
+
+    void setDecryptKey(int[] decryptKey);
     void init();
 }

@@ -37,9 +37,8 @@ public class ChatApplication extends Application {
             stage.initStyle(StageStyle.UNDECORATED);
             stage.setResizable(false);
 
-
             StageManager stageManager = new StageManager(stage, FxmlView.LOGIN);
-            stageManager.switchScene(FxmlView.LOGIN, socket, null);
+            stageManager.switchScene(FxmlView.LOGIN, socket, null, idea.getEncryptKeys(), idea.getDecryptKeys());
         } catch (Exception e) {
             System.err.println("Can't connect to server.");
         }

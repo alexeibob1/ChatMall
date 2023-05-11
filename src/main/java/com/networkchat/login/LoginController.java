@@ -42,6 +42,9 @@ public class LoginController implements Controllable {
     ClientSocket socket;
     String username;
 
+    int[] encryptKey;
+    int[] decryptKey;
+
     @FXML
     void onBtnCloseClicked(MouseEvent event) {
         this.stage.close();
@@ -64,7 +67,7 @@ public class LoginController implements Controllable {
 
     @FXML
     void onRegisterBtnClicked(MouseEvent event) {
-        this.stageManager.switchScene(FxmlView.REGISTRATION, this.socket, null);
+        this.stageManager.switchScene(FxmlView.REGISTRATION, this.socket, null, encryptKey, decryptKey);
     }
 
     @Override
@@ -85,6 +88,16 @@ public class LoginController implements Controllable {
     @Override
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    @Override
+    public void setEncryptKey(int[] encryptKey) {
+        this.encryptKey = encryptKey;
+    }
+
+    @Override
+    public void setDecryptKey(int[] decryptKey) {
+        this.decryptKey = decryptKey;
     }
 
     @Override
@@ -121,7 +134,7 @@ public class LoginController implements Controllable {
                     case NOT_CONFIRMED -> {
                         user.setPassword("");
                         user.setEmail("");
-                        stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, username);
+                        stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, username, encryptKey, decryptKey);
                     }
                 }
             }

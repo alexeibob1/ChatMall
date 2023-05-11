@@ -7,18 +7,18 @@ import com.networkchat.packets.server.PublicKeyServerPacket;
 import com.networkchat.packets.server.ServerPacket;
 import com.networkchat.packets.server.ServerResponse;
 import com.networkchat.security.KeyDistributor;
+import com.networkchat.security.idea.Idea;
 import com.networkchat.sql.SQLConnection;
 import com.networkchat.sql.SqlResultCode;
 import com.networkchat.utils.ByteArrayConverter;
 
 import javax.crypto.Cipher;
-import java.io.*;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.sql.SQLException;
-import java.util.UUID;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
@@ -52,12 +52,14 @@ public class ClientHandler implements Runnable {
 
             Cipher decipher = Cipher.getInstance("RSA");
             decipher.init(Cipher.DECRYPT_MODE, privateKey);
-            int[] encryptionByteKey = ByteArrayConverter.byteArrayToIntArray(decipher.doFinal(((IdeaKeysClientPacket) clientPacket).getEncryptKey()));
-            int[] decryptionByteKey = ByteArrayConverter.byteArrayToIntArray(decipher.doFinal(((IdeaKeysClientPacket) clientPacket).getDecryptKey()));
+            int[] encryptionKey = ByteArrayConverter.byteArrayToIntArray(decipher.doFinal(((IdeaKeysClientPacket) clientPacket).getEncryptKey()));
+            int[] decryptionKey = ByteArrayConverter.byteArrayToIntArray(decipher.doFinal(((IdeaKeysClientPacket) clientPacket).getDecryptKey()));
+            Idea idea = new Idea(encryptionKey, decryptionKey);
 
-            //process requests from user
             while (true) {
-                clientPacket = (ClientPacket) in.readObject();
+                String encryptedJson = (String) in.readObject();
+                String decryptedJson = idea.decrypt(encryptedJson);
+                clientPacket = ClientPacket.jsonDeserialize(decryptedJson);
 
                 switch (clientPacket.getRequest()) {
                     case REGISTER -> {

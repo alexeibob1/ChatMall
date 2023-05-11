@@ -58,9 +58,11 @@ public class ConfirmationController implements Controllable {
     ClientSocket socket;
     String username;
 
+    int[] encryptKey;
+    int[] decryptKey;
     @FXML
     void onBtnCloseClicked(MouseEvent event) {
-        stageManager.switchScene(FxmlView.LOGIN, this.socket, null);
+        stageManager.switchScene(FxmlView.LOGIN, this.socket, null, encryptKey, decryptKey);
     }
 
     @FXML
@@ -80,7 +82,7 @@ public class ConfirmationController implements Controllable {
                 if (resultCode == SqlResultCode.WRONG_CODE) {
                     eConfirmationCode.setStyle(eConfirmationCode.getStyle() + errorStyle);
                 } else if (resultCode == SqlResultCode.CORRECT_CODE) {
-                    stageManager.switchScene(FxmlView.LOGIN, this.socket, null);
+                    stageManager.switchScene(FxmlView.LOGIN, this.socket, null, encryptKey, decryptKey);
                 }
             }
         } catch (Exception e) {
@@ -111,6 +113,15 @@ public class ConfirmationController implements Controllable {
     @Override
     public void setUsername(String username) {
         this.username = username;
+    }
+    @Override
+    public void setEncryptKey(int[] encryptKey) {
+        this.encryptKey = encryptKey;
+    }
+
+    @Override
+    public void setDecryptKey(int[] decryptKey) {
+        this.decryptKey = decryptKey;
     }
 
     @Override

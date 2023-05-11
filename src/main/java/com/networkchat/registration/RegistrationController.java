@@ -11,6 +11,7 @@ import com.networkchat.packets.server.ServerPacket;
 import com.networkchat.resources.FxmlView;
 import com.networkchat.packets.client.ClientRequest;
 import com.networkchat.security.SHA256;
+import com.networkchat.security.idea.Idea;
 import com.networkchat.sql.SqlResultCode;
 import com.networkchat.tooltips.EmailTooltip;
 import com.networkchat.tooltips.UsernameTooltip;
@@ -63,6 +64,9 @@ public class RegistrationController implements Controllable {
     ClientSocket socket;
     String username;
 
+    int[] encryptKey;
+    int[] decryptKey;
+
     @FXML
     void onBtnMinimizeClicked(MouseEvent event) {
         this.stage.setIconified(true);
@@ -80,7 +84,7 @@ public class RegistrationController implements Controllable {
 
     @FXML
     void onBtnSignInClicked(MouseEvent event) {
-        this.stageManager.switchScene(FxmlView.LOGIN, this.socket, null);
+        this.stageManager.switchScene(FxmlView.LOGIN, this.socket, null, encryptKey, decryptKey);
     }
 
     @FXML
@@ -88,7 +92,8 @@ public class RegistrationController implements Controllable {
         removeTooltips();
         try {
             ClientPacket clientPacket = new RegistrationClientPacket(ClientRequest.REGISTER, eUsername.getText(), eEmail.getText(), SHA256.getHashString(ePassword.getText()));
-            this.socket.getOut().writeUnshared(clientPacket);
+            Idea idea = new Idea(encryptKey, decryptKey);
+            this.socket.getOut().writeUnshared(idea.encrypt(clientPacket.jsonSerialize()));
             this.socket.getOut().flush();
 
             String encryptedJson = (String) this.socket.getIn().readObject();
@@ -107,7 +112,7 @@ public class RegistrationController implements Controllable {
                     eEmail.setTooltip(EmailTooltip.getTooltip());
                     eEmail.setStyle(eUsername.getStyle() + errorStyle);
                 }
-                case SUCCESSFUL_REGISTRATION -> stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, eUsername.getText());
+                case SUCCESSFUL_REGISTRATION -> stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, eUsername.getText(), encryptKey, decryptKey);
             }
 
         } catch (Exception e) {
@@ -139,6 +144,16 @@ public class RegistrationController implements Controllable {
     @Override
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    @Override
+    public void setEncryptKey(int[] encryptKey) {
+        this.encryptKey = encryptKey;
+    }
+
+    @Override
+    public void setDecryptKey(int[] decryptKey) {
+        this.decryptKey = decryptKey;
     }
 
     @Override
