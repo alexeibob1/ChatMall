@@ -93,7 +93,7 @@ public class RegistrationController implements Controllable {
         try {
             ClientPacket clientPacket = new RegistrationClientPacket(ClientRequest.REGISTER, eUsername.getText(), eEmail.getText(), SHA256.getHashString(ePassword.getText()));
             Idea idea = new Idea(encryptKey, decryptKey);
-            this.socket.getOut().writeUnshared(idea.encrypt(clientPacket.jsonSerialize()));
+            //this.socket.getOut().writeUnshared(idea.encrypt(clientPacket.jsonSerialize()));
             this.socket.getOut().flush();
 
             String encryptedJson = (String) this.socket.getIn().readObject();

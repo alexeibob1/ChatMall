@@ -28,8 +28,8 @@ public class ChatApplication extends Application {
             PublicKey publicRsaKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(keyServerPacket.getPublicKey()));
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.ENCRYPT_MODE, publicRsaKey);
-            byte[] encryptedEncryptKey = cipher.doFinal(ByteArrayConverter.intArrayToByteArray(idea.getEncryptKeys()));
-            byte[] encryptedDecryptKey = cipher.doFinal(ByteArrayConverter.intArrayToByteArray(idea.getDecryptKeys()));
+            byte[] encryptedEncryptKey = cipher.doFinal(ByteArrayConverter.intArrayToByteArray(idea.getEncryptKey()));
+            byte[] encryptedDecryptKey = cipher.doFinal(ByteArrayConverter.intArrayToByteArray(idea.getDecryptKey()));
 
             socket.getOut().writeUnshared(new IdeaKeysClientPacket(ClientRequest.SEND_IDEA_KEYS, encryptedEncryptKey, encryptedDecryptKey));
             socket.getOut().flush();
@@ -38,7 +38,7 @@ public class ChatApplication extends Application {
             stage.setResizable(false);
 
             StageManager stageManager = new StageManager(stage, FxmlView.LOGIN);
-            stageManager.switchScene(FxmlView.LOGIN, socket, null, idea.getEncryptKeys(), idea.getDecryptKeys());
+            stageManager.switchScene(FxmlView.LOGIN, socket, null, idea.getEncryptKey(), idea.getDecryptKey());
         } catch (Exception e) {
             System.err.println("Can't connect to server.");
         }

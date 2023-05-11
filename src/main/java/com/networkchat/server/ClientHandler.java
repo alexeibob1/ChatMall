@@ -58,8 +58,8 @@ public class ClientHandler implements Runnable {
 
             while (true) {
                 String encryptedJson = (String) in.readObject();
-                String decryptedJson = idea.decrypt(encryptedJson);
-                clientPacket = ClientPacket.jsonDeserialize(decryptedJson);
+                //String decryptedJson = idea.decrypt(encryptedJson);
+               // clientPacket = ClientPacket.jsonDeserialize(decryptedJson);
 
                 switch (clientPacket.getRequest()) {
                     case REGISTER -> {
