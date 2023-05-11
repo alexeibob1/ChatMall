@@ -1,5 +1,6 @@
 package com.networkchat.security.idea;
 
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,43 +32,57 @@ public class Idea {
         return decryptKey;
     }
 
-    public void crypt(byte[] data, int dataPos, boolean toEncrypt) {
+    public byte[] crypt(byte[] rawData, boolean toEncrypt) {
+        byte[] data = rawData;
+        int length = rawData.length;
+        if (length % 8 != 0) {
+            int delta = 8 - length % 8;
+            data = Arrays.copyOf(rawData, delta + length);
+            while (delta > 0) {
+                data[data.length - delta] = (byte)' ';
+                delta--;
+            }
+        }
         int[] key = toEncrypt ? encryptKey : decryptKey;
-        int x0 = ((data[dataPos] & 0xFF) << 8) | (data[dataPos + 1] & 0xFF);
-        int x1 = ((data[dataPos + 2] & 0xFF) << 8) | (data[dataPos + 3] & 0xFF);
-        int x2 = ((data[dataPos + 4] & 0xFF) << 8) | (data[dataPos + 5] & 0xFF);
-        int x3 = ((data[dataPos + 6] & 0xFF) << 8) | (data[dataPos + 7] & 0xFF);
-        //
-        int p = 0;
-        for (int round = 0; round < rounds; round++) {
-            int y0 = mul(x0, key[p++]);
-            int y1 = add(x1, key[p++]);
-            int y2 = add(x2, key[p++]);
-            int y3 = mul(x3, key[p++]);
+        for (int dataPos = 0; dataPos < data.length; dataPos += 8) {
+            int x0 = ((data[dataPos] & 0xFF) << 8) | (data[dataPos + 1] & 0xFF);
+            int x1 = ((data[dataPos + 2] & 0xFF) << 8) | (data[dataPos + 3] & 0xFF);
+            int x2 = ((data[dataPos + 4] & 0xFF) << 8) | (data[dataPos + 5] & 0xFF);
+            int x3 = ((data[dataPos + 6] & 0xFF) << 8) | (data[dataPos + 7] & 0xFF);
             //
-            int t0 = mul(y0 ^ y2, key[p++]);
-            int t1 = add(y1 ^ y3, t0);
-            int t2 = mul(t1, key[p++]);
-            int t3 = add(t0, t2);
+            int p = 0;
+            for (int round = 0; round < rounds; round++) {
+                int y0 = mul(x0, key[p++]);
+                int y1 = add(x1, key[p++]);
+                int y2 = add(x2, key[p++]);
+                int y3 = mul(x3, key[p++]);
+                //
+                int t0 = mul(y0 ^ y2, key[p++]);
+                int t1 = add(y1 ^ y3, t0);
+                int t2 = mul(t1, key[p++]);
+                int t3 = add(t0, t2);
+                //
+                x0 = y0 ^ t2;
+                x1 = y2 ^ t2;
+                x2 = y1 ^ t3;
+                x3 = y3 ^ t3; }
             //
-            x0 = y0 ^ t2;
-            x1 = y2 ^ t2;
-            x2 = y1 ^ t3;
-            x3 = y3 ^ t3; }
-        //
-        int r0 = mul(x0, key[p++]);
-        int r1 = add(x2, key[p++]);
-        int r2 = add(x1, key[p++]);
-        int r3 = mul(x3, key[p++]);
-        //
-        data[dataPos] = (byte)(r0 >> 8);
-        data[dataPos + 1] = (byte)r0;
-        data[dataPos + 2] = (byte)(r1 >> 8);
-        data[dataPos + 3] = (byte)r1;
-        data[dataPos + 4] = (byte)(r2 >> 8);
-        data[dataPos + 5] = (byte)r2;
-        data[dataPos + 6] = (byte)(r3 >> 8);
-        data[dataPos + 7] = (byte)r3; }
+            int r0 = mul(x0, key[p++]);
+            int r1 = add(x2, key[p++]);
+            int r2 = add(x1, key[p++]);
+            int r3 = mul(x3, key[p++]);
+            //
+            data[dataPos] = (byte)(r0 >> 8);
+            data[dataPos + 1] = (byte)r0;
+            data[dataPos + 2] = (byte)(r1 >> 8);
+            data[dataPos + 3] = (byte)r1;
+            data[dataPos + 4] = (byte)(r2 >> 8);
+            data[dataPos + 5] = (byte)r2;
+            data[dataPos + 6] = (byte)(r3 >> 8);
+            data[dataPos + 7] = (byte)r3;
+        }
+        return data;
+    }
 
     private static int add (int a, int b) {
         return (a + b) & 0xFFFF;
@@ -142,11 +157,12 @@ public class Idea {
 
     public static void main(String[] args) {
         Idea idea = new Idea();
-        String s = "Hello, world!";
-        byte[] sBytes = s.getBytes();
-        idea.crypt(sBytes, 0, true);
-        idea.crypt(sBytes, 0, false);
-        String s1 = new String(sBytes);
+        String s = "Да пошёл ты нахуй ldln  wlfnfa";
+
+        byte[] encr = idea.crypt(s.getBytes(), true);
+        byte[] decr = idea.crypt(encr, false);
+
+        String s1 = new String(decr, StandardCharsets.UTF_8);
     }
 
 }
