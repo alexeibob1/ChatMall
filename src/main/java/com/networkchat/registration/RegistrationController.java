@@ -5,8 +5,12 @@ import com.networkchat.client.ClientSocket;
 import com.networkchat.client.User;
 import com.networkchat.fxml.Controllable;
 import com.networkchat.fxml.StageManager;
+import com.networkchat.packets.client.ClientPacket;
+import com.networkchat.packets.client.RegistrationClientPacket;
+import com.networkchat.packets.server.ServerPacket;
 import com.networkchat.resources.FxmlView;
-import com.networkchat.packets.ClientRequest;
+import com.networkchat.packets.client.ClientRequest;
+import com.networkchat.security.SHA256;
 import com.networkchat.sql.SqlResultCode;
 import com.networkchat.tooltips.EmailTooltip;
 import com.networkchat.tooltips.UsernameTooltip;
@@ -56,7 +60,6 @@ public class RegistrationController implements Controllable {
 
     Stage stage;
 
-    User user;
 
     StageManager stageManager;
     ClientSocket socket;
@@ -85,12 +88,16 @@ public class RegistrationController implements Controllable {
     void onBtnSignUpClicked(MouseEvent event) {
         removeTooltips();
         try {
-            User user = new User(eUsername.getText(), eEmail.getText(), ePassword.getText());
-            user.setRequest(ClientRequest.REGISTER);
-            this.socket.getOut().writeUnshared(user);
+            ClientPacket clientPacket = new RegistrationClientPacket(ClientRequest.REGISTER, eUsername.getText(), eEmail.getText(), SHA256.getHashString(ePassword.getText()));
+            this.socket.getOut().writeUnshared(clientPacket);
             this.socket.getOut().flush();
 
-            Object response = this.socket.getIn().readObject();
+            String encryptedJson = (String) this.socket.getIn().readObject();
+
+            //!!remember to decrypt
+            String decryptedJson = encryptedJson;
+
+            ServerPacket serverPacket = this.socket.getIn().readObject();
 
             if (response.getClass() == SqlResultCode.class) {
                 SqlResultCode resultCode = (SqlResultCode) response;

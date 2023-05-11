@@ -6,7 +6,7 @@ import com.networkchat.client.User;
 import com.networkchat.fxml.Controllable;
 import com.networkchat.resources.FxmlView;
 import com.networkchat.fxml.StageManager;
-import com.networkchat.packets.ClientRequest;
+import com.networkchat.packets.client.ClientRequest;
 import com.networkchat.sql.SqlResultCode;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;

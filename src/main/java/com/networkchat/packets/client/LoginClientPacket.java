@@ -1,18 +1,17 @@
-package com.networkchat.packets;
+package com.networkchat.packets.client;
 
 import java.io.Serializable;
 
-public class RegistrationPacket extends Packet implements Serializable {
+public class LoginClientPacket extends ClientPacket implements Serializable {
     private String username;
-    private String email;
+
     private String password;
 
-    public RegistrationPacket() {}
+    public LoginClientPacket() {}
 
-    public RegistrationPacket(ClientRequest request, String username, String email, String password) {
+    public LoginClientPacket(ClientRequest request, String username, String password) {
         super(request);
         this.username = username;
-        this.email = email;
         this.password = password;
     }
 
@@ -22,14 +21,6 @@ public class RegistrationPacket extends Packet implements Serializable {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getPassword() {

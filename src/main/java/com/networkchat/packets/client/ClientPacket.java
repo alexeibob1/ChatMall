@@ -1,4 +1,4 @@
-package com.networkchat.packets;
+package com.networkchat.packets.client;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -9,17 +9,17 @@ import java.io.Serializable;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = RegistrationPacket.class, name = "Registration packet"),
-        @JsonSubTypes.Type(value = LoginPacket.class, name = "Login packet"),
-        @JsonSubTypes.Type(value = ConfirmationPacket.class, name = "Confirmation packet")
+        @JsonSubTypes.Type(value = RegistrationClientPacket.class, name = "Registration packet"),
+        @JsonSubTypes.Type(value = LoginClientPacket.class, name = "Login packet"),
+        @JsonSubTypes.Type(value = ConfirmationClientPacket.class, name = "Confirmation packet")
 })
 
-public class Packet implements Serializable {
+public class ClientPacket implements Serializable {
     private ClientRequest request;
 
-    public Packet() {}
+    public ClientPacket() {}
 
-    public Packet(ClientRequest request) {
+    public ClientPacket(ClientRequest request) {
         this.request = request;
     }
 
@@ -36,7 +36,7 @@ public class Packet implements Serializable {
         return mapper.writeValueAsString(this);
     }
 
-    public static Packet jsonDeserialize(String jsonValue) throws JsonProcessingException {
-        return new ObjectMapper().readValue(jsonValue, Packet.class);
+    public static ClientPacket jsonDeserialize(String jsonValue) throws JsonProcessingException {
+        return new ObjectMapper().readValue(jsonValue, ClientPacket.class);
     }
 }

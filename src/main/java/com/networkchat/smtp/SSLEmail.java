@@ -11,7 +11,8 @@ public class SSLEmail {
     private final String fromEmail = "fingerloom2004@gmail.com";
     private final String password = "eprxzfqggxyfjsqz";
     private final String subject = "Please verify your registration";
-    private User user;
+    private String username;
+    private String email;
     private String content = "Dear [[name]],\n"
             + "Please enter the code below in the application to verify your registration:\n\n"
             + "[[code]]\n\n"
@@ -19,8 +20,9 @@ public class SSLEmail {
             "Thank you,\n"
             + "Team of ChatMall application.";
 
-    public SSLEmail(User user) {
-        this.user = user;
+    public SSLEmail(String username, String email) {
+        this.username = username;
+        this.email = email;
     }
 
     public void sendConfirmationMessage(String code) {
@@ -32,11 +34,11 @@ public class SSLEmail {
             }
         };
 
-        content = content.replace("[[name]]", user.getUsername());
+        content = content.replace("[[name]]", this.username);
         content = content.replace("[[code]]", code);
 
         Session session = Session.getDefaultInstance(props, auth);
-        EmailUtil.sendEmail(session, this.user.getEmail(), subject, content);
+        EmailUtil.sendEmail(session, this.email, subject, content);
     }
 
     private void initProperties(Properties props) {

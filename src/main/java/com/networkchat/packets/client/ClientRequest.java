@@ -1,4 +1,4 @@
-package com.networkchat.packets;
+package com.networkchat.packets.client;
 
 public enum ClientRequest {
     LOGIN, REGISTER, CONFIRM_REGISTRATION

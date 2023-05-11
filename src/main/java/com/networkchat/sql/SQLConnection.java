@@ -50,15 +50,15 @@ public class SQLConnection {
         this.connection = DriverManager.getConnection(DB_ADDRESS, ADMIN_USERNAME, ADMIN_PASSWORD);
     }
 
-    public SqlResultCode checkNewUserInfo(User user) {
+    public SqlResultCode checkNewUserInfo(String username, String email) {
         //check for existing username
-        if (checkUsernameExistence(user) == SqlResultCode.EXISTING_USERNAME) {
+        if (checkUsernameExistence(username) == SqlResultCode.EXISTING_USERNAME) {
             return SqlResultCode.EXISTING_USERNAME;
         }
 
         //check for existing email
         try (PreparedStatement stmt = this.connection.prepareStatement(checkEmailExistenceQuery)) {
-            stmt.setString(1, user.getEmail());
+            stmt.setString(1, email);
             ResultSet resultSet = stmt.executeQuery();
             if (resultSet.isBeforeFirst()) {
                 return SqlResultCode.REPEATED_EMAIL;
@@ -71,16 +71,16 @@ public class SQLConnection {
         return SqlResultCode.SUCCESS;
     }
 
-    public void sendConfirmationCode(User user) {
+    public void sendConfirmationCode(String username, String email) {
         String hash = generateVerificationCode();
-        SSLEmail emailConnection = new SSLEmail(user);
+        SSLEmail emailConnection = new SSLEmail(username, email);
         emailConnection.sendConfirmationMessage(hash);
-        safeConfirmationCode(hash, user);
+        safeConfirmationCode(hash, username);
     }
 
-    private void safeConfirmationCode(String hash, User user) {
+    private void safeConfirmationCode(String hash, String username) {
         try (PreparedStatement stmt = this.connection.prepareStatement(safeConfirmationCodeQuery)) {
-            stmt.setString(1, user.getUsername());
+            stmt.setString(1, username);
             stmt.setString(2, hash);
             stmt.executeUpdate();
         } catch (Exception e) {
@@ -93,12 +93,12 @@ public class SQLConnection {
         return String.valueOf(random.nextInt(100000, 999999));
     }
 
-    public void safeUserData(User user) {
+    public void safeUserData(String username, String email, String salt, String encryptedData) {
         try (PreparedStatement stmt = this.connection.prepareStatement(safeNewUserQuery)) {
-            stmt.setString(1, user.getUsername());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getSalt());
-            stmt.setString(4, user.getEncryptedData());
+            stmt.setString(1, username);
+            stmt.setString(2, email);
+            stmt.setString(3, salt);
+            stmt.setString(4, encryptedData);
             stmt.setByte(5, (byte) 0);
             stmt.executeUpdate();
         } catch (Exception e) {
@@ -106,9 +106,9 @@ public class SQLConnection {
         }
     }
 
-    public SqlResultCode checkUsernameExistence(User user) {
+    public SqlResultCode checkUsernameExistence(String username) {
         try (PreparedStatement stmt = this.connection.prepareStatement(checkUsernameExistenceQuery)) {
-            stmt.setString(1, user.getUsername());
+            stmt.setString(1, username);
             ResultSet resultSet = stmt.executeQuery();
             if (resultSet.isBeforeFirst()) {
                 return SqlResultCode.EXISTING_USERNAME;
@@ -132,18 +132,18 @@ public class SQLConnection {
         return "";
     }
 
-    public SqlResultCode checkConfirmationCode(User user) {
+    public SqlResultCode checkConfirmationCode(String username, int code) {
         try (PreparedStatement stmt = this.connection.prepareStatement(checkConfirmationCodeQuery)) {
-            stmt.setString(1, user.getConfirmationCode());
-            stmt.setString(2, user.getUsername());
+            stmt.setInt(1, code);
+            stmt.setString(2, username);
             ResultSet resultSet = stmt.executeQuery();
             if (resultSet.isBeforeFirst()) {
                 try (PreparedStatement updStmt = this.connection.prepareStatement(updateUserStatusQuery)) {
-                    updStmt.setString(1, user.getUsername());
+                    updStmt.setString(1, username);
                     updStmt.executeUpdate();
                 }
                 try (PreparedStatement dltStmt = this.connection.prepareStatement(deleteConfirmationCodeQuery)) {
-                    dltStmt.setString(1, user.getUsername());
+                    dltStmt.setString(1, username);
                     dltStmt.executeUpdate();
                 }
                 return SqlResultCode.CORRECT_CODE;
@@ -179,13 +179,13 @@ public class SQLConnection {
         return "";
     }
 
-    public SqlResultCode checkPermission(User user) throws NoSuchAlgorithmException {
-        if (checkUsernameExistence(user) == SqlResultCode.EXISTING_USERNAME) {
-            int userStatus = getUserStatus(user.getUsername());
-            String salt = getSalt(user.getUsername());
-            String hashedData = AuthDataEncryptor.encryptLoginData(salt, user.getUsername(), user.getPassword());
+    public SqlResultCode checkPermission(String username, String password) throws NoSuchAlgorithmException {
+        if (checkUsernameExistence(username) == SqlResultCode.EXISTING_USERNAME) {
+            int userStatus = getUserStatus(username);
+            String salt = getSalt(username);
+            String hashedData = AuthDataEncryptor.encryptLoginData(salt, username, password);
             try (PreparedStatement stmt = this.connection.prepareStatement(checkUserPassword)) {
-                stmt.setString(1, user.getUsername());
+                stmt.setString(1, username);
                 stmt.setString(2, hashedData);
                 ResultSet resultSet = stmt.executeQuery();
                 if (resultSet.isBeforeFirst() && userStatus == 1) {

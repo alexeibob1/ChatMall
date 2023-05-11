@@ -1,22 +1,13 @@
 package com.networkchat.server;
 
-import com.networkchat.client.User;
-import com.networkchat.security.AuthDataEncryptor;
-import com.networkchat.security.KeyDistributor;
-import com.networkchat.security.idea.Idea;
-import com.networkchat.security.idea.IdeaKeys;
+import com.networkchat.packets.client.ClientPacket;
+import com.networkchat.packets.client.RegistrationClientPacket;
 import com.networkchat.sql.SQLConnection;
 import com.networkchat.sql.SqlResultCode;
 
-import javax.crypto.Cipher;
 import java.io.*;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-import java.nio.charset.StandardCharsets;
-import java.security.*;
 import java.sql.SQLException;
-import java.util.Base64;
 import java.util.UUID;
 
 public class ClientHandler implements Runnable {
@@ -40,42 +31,48 @@ public class ClientHandler implements Runnable {
              ObjectInputStream in = new ObjectInputStream(this.socket.getInputStream())) {
 
             //generate RSA key
-            KeyPair keyPair = KeyDistributor.getKeyPair();
-            PublicKey publicKey = keyPair.getPublic();
-            PrivateKey privateKey = keyPair.getPrivate();
-
-            out.writeObject(publicKey);
-            out.flush();
-
-            //read keys from client
-            byte[] encryptedEncryptKey = (byte[])in.readObject();
-
-
-            Cipher decipher = Cipher.getInstance("RSA");
-            decipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] decryptedEncrypted = decipher.doFinal(encryptedEncryptKey);
-            ByteBuffer byteBuffer = ByteBuffer.wrap(decryptedEncrypted);
-            IntBuffer intBuffer = byteBuffer.asIntBuffer();
-            int[] finalIdeaEncryptKey = new int[decryptedEncrypted.length / 4];
-            int i = 0;
-            while (intBuffer.hasRemaining()) {
-                finalIdeaEncryptKey[i++] = intBuffer.get();
-            }
-
-
-
-            dbConnection = new SQLConnection();
-            //dbConnection.safePublicKey(connectionID, rsaKey);
-            dbConnection.close();
+//            KeyPair keyPair = KeyDistributor.getKeyPair();
+//            PublicKey publicKey = keyPair.getPublic();
+//            PrivateKey privateKey = keyPair.getPrivate();
+//
+//            out.writeObject(publicKey);
+//            out.flush();
+//
+//            //read keys from client
+//            byte[] encryptedEncryptKey = (byte[])in.readObject();
+//
+//
+//            Cipher decipher = Cipher.getInstance("RSA");
+//            decipher.init(Cipher.DECRYPT_MODE, privateKey);
+//            byte[] decryptedEncrypted = decipher.doFinal(encryptedEncryptKey);
+//            ByteBuffer byteBuffer = ByteBuffer.wrap(decryptedEncrypted);
+//            IntBuffer intBuffer = byteBuffer.asIntBuffer();
+//            int[] finalIdeaEncryptKey = new int[decryptedEncrypted.length / 4];
+//            int i = 0;
+//            while (intBuffer.hasRemaining()) {
+//                finalIdeaEncryptKey[i++] = intBuffer.get();
+//            }
+//
+//
+//
+//            dbConnection = new SQLConnection();
+//            //dbConnection.safePublicKey(connectionID, rsaKey);
+//            dbConnection.close();
 
 
             //process requests from user
             while (true) {
-                User user = (User)in.readObject();
-                switch (user.getRequest()) {
+                String encryptedJson = (String)in.readObject();
+
+                //you should decrypt
+                String decryptedJson = encryptedJson;
+
+                ClientPacket clientPacket = ClientPacket.jsonDeserialize(decryptedJson);
+
+                switch (clientPacket.getRequest()) {
                     case REGISTER -> {
                         dbConnection = new SQLConnection();
-                        SqlResultCode sqlResult = dbConnection.checkNewUserInfo(user);
+                        SqlResultCode sqlResult = dbConnection.checkNewUserInfo(((RegistrationClientPacket) clientPacket).getUsername(), ((RegistrationClientPacket) clientPacket).getEmail());
                         switch (sqlResult) {
                             case EXISTING_USERNAME -> {
                                 out.writeObject(SqlResultCode.EXISTING_USERNAME);
@@ -86,11 +83,11 @@ public class ClientHandler implements Runnable {
                                 out.flush();
                             }
                             case SUCCESS -> {
-                                AuthDataEncryptor.encryptRegistrationData(user);
-                                dbConnection.safeUserData(user);
-                                out.writeObject(SqlResultCode.SUCCESS);
-                                out.flush();
-                                dbConnection.sendConfirmationCode(user);
+//                                AuthDataEncryptor.encryptRegistrationData(user);
+//                                dbConnection.safeUserData(user);
+//                                out.writeObject(SqlResultCode.SUCCESS);
+//                                out.flush();
+//                                dbConnection.sendConfirmationCode(user);
                             }
                         }
                         dbConnection.close();

@@ -1,14 +1,14 @@
-package com.networkchat.packets;
+package com.networkchat.packets.client;
 
 import java.io.Serializable;
 
-public class ConfirmationPacket extends Packet implements Serializable {
+public class ConfirmationClientPacket extends ClientPacket implements Serializable {
     private String email;
     private String code;
 
-    public ConfirmationPacket() {}
+    public ConfirmationClientPacket() {}
 
-    public ConfirmationPacket(ClientRequest request, String email, String code) {
+    public ConfirmationClientPacket(ClientRequest request, String email, String code) {
         super(request);
         this.email = email;
         this.code = code;
