@@ -56,7 +56,7 @@ public class ConfirmationController implements Controllable {
 
     StageManager stageManager;
     ClientSocket socket;
-    User user;
+    String username;
 
     @FXML
     void onBtnCloseClicked(MouseEvent event) {
@@ -67,10 +67,10 @@ public class ConfirmationController implements Controllable {
     void onBtnConfirmClicked(MouseEvent event) {
         eConfirmationCode.setStyle(eConfirmationCode.getStyle().replaceAll(errorStyle, ""));
         try {
-            user.setRequest(ClientRequest.CONFIRM_REGISTRATION);
-            user.setPassword("");
-            user.setConfirmationCode(eConfirmationCode.getText());
-            this.socket.getOut().writeUnshared(user);
+//            user.setRequest(ClientRequest.CONFIRM_REGISTRATION);
+//            user.setPassword("");
+//            user.setConfirmationCode(eConfirmationCode.getText());
+//            this.socket.getOut().writeUnshared(user);
             this.socket.getOut().flush();
 
             Object response = this.socket.getIn().readObject();
@@ -109,8 +109,8 @@ public class ConfirmationController implements Controllable {
     }
 
     @Override
-    public void setUser(User user) {
-        this.user = user;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     @Override

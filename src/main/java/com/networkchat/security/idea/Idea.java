@@ -1,5 +1,6 @@
 package com.networkchat.security.idea;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,9 +9,12 @@ public class Idea {
 
     private int keySize;
     private int blockSize;
-    public Idea(byte[] initVector) {
+    public Idea() {
         keySize = 16;
         blockSize = 8;
+        SecureRandom random = new SecureRandom();
+        byte[] initVector = new byte[16];
+        random.nextBytes(initVector);
         setKey(initVector);
     }
 

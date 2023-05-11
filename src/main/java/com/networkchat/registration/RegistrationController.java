@@ -59,10 +59,9 @@ public class RegistrationController implements Controllable {
             "-fx-border-width: 2px;";
 
     Stage stage;
-
-
     StageManager stageManager;
     ClientSocket socket;
+    String username;
 
     @FXML
     void onBtnMinimizeClicked(MouseEvent event) {
@@ -97,24 +96,20 @@ public class RegistrationController implements Controllable {
             //!!remember to decrypt
             String decryptedJson = encryptedJson;
 
-            ServerPacket serverPacket = this.socket.getIn().readObject();
+            ServerPacket serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
 
-            if (response.getClass() == SqlResultCode.class) {
-                SqlResultCode resultCode = (SqlResultCode) response;
-                switch (resultCode) {
-                    case EXISTING_USERNAME -> {
-                        eUsername.setTooltip(UsernameTooltip.getTooltip());
-                        eUsername.setStyle(eUsername.getStyle() + errorStyle);
-                    }
-                    case REPEATED_EMAIL -> {
-                        eEmail.setTooltip(EmailTooltip.getTooltip());
-                        eEmail.setStyle(eUsername.getStyle() + errorStyle);
-                    }
-                    case SUCCESS -> {
-                        stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, user);
-                    }
+            switch (serverPacket.getResponse()) {
+                case EXISTING_USERNAME -> {
+                    eUsername.setTooltip(UsernameTooltip.getTooltip());
+                    eUsername.setStyle(eUsername.getStyle() + errorStyle);
                 }
+                case REPEATED_EMAIL -> {
+                    eEmail.setTooltip(EmailTooltip.getTooltip());
+                    eEmail.setStyle(eUsername.getStyle() + errorStyle);
+                }
+                case SUCCESSFUL_REGISTRATION -> stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, eUsername.getText());
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -142,8 +137,8 @@ public class RegistrationController implements Controllable {
     }
 
     @Override
-    public void setUser(User user) {
-        this.user = user;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     @Override

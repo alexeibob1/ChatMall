@@ -29,13 +29,4 @@ public class ServerPacket implements Serializable {
     public void setResponse(ServerResponse response) {
         this.response = response;
     }
-
-    public String jsonSerialize() throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(this);
-    }
-
-    public static ServerPacket jsonDeserialize(String jsonValue) throws JsonProcessingException {
-        return new ObjectMapper().readValue(jsonValue, ServerPacket.class);
-    }
 }

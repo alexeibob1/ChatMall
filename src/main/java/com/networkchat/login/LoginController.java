@@ -40,7 +40,7 @@ public class LoginController implements Controllable {
     Stage stage;
     StageManager stageManager;
     ClientSocket socket;
-    User user;
+    String username;
 
     @FXML
     void onBtnCloseClicked(MouseEvent event) {
@@ -83,8 +83,8 @@ public class LoginController implements Controllable {
     }
 
     @Override
-    public void setUser(User user) {
-        this.user = user;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     @Override
@@ -121,7 +121,7 @@ public class LoginController implements Controllable {
                     case NOT_CONFIRMED -> {
                         user.setPassword("");
                         user.setEmail("");
-                        stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, user);
+                        stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, username);
                     }
                 }
             }

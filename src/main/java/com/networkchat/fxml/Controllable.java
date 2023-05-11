@@ -9,6 +9,6 @@ public interface Controllable {
     void setStageManager(StageManager stageManager);
     void setSocket(ClientSocket socket);
 
-    void setUser(User user);
+    void setUsername(String username);
     void init();
 }

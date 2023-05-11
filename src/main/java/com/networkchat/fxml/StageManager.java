@@ -38,27 +38,27 @@ public class StageManager {
     }
 
 
-    public void switchScene(FxmlView formType, ClientSocket socket, User user) {
+    public void switchScene(FxmlView formType, ClientSocket socket, String username) {
         this.fxmlLoader = formType.getFxmlLoader();
-        show(formType.getRoot(), socket, user);
+        show(formType.getRoot(), socket, username);
     }
 
-    private void show(Parent root, ClientSocket socket, User user) {
+    private void show(Parent root, ClientSocket socket, String username) {
         Scene scene = this.primaryStage.getScene();
         scene.setRoot(root);
         scene.getWindow().sizeToScene();
         this.primaryStage.centerOnScreen();
         this.primaryStage.setScene(scene);
-        initController(socket, user);
+        initController(socket, username);
         this.primaryStage.show();
     }
 
-    private void initController(ClientSocket socket, User user) {
+    private void initController(ClientSocket socket, String username) {
         Controllable controller = this.fxmlLoader.getController();
         controller.setStage(this.primaryStage);
         controller.setStageManager(this);
         controller.setSocket(socket);
-        controller.setUser(user);
+        controller.setUsername(username);
         controller.init();
     }
 

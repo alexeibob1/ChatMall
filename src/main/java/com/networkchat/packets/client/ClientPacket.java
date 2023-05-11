@@ -30,13 +30,4 @@ public class ClientPacket implements Serializable {
     public void setRequest(ClientRequest request) {
         this.request = request;
     }
-
-    public String jsonSerialize() throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(this);
-    }
-
-    public static ClientPacket jsonDeserialize(String jsonValue) throws JsonProcessingException {
-        return new ObjectMapper().readValue(jsonValue, ClientPacket.class);
-    }
 }

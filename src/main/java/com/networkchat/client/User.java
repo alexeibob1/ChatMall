@@ -1,8 +1,14 @@
 package com.networkchat.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networkchat.packets.client.ClientRequest;
+import com.networkchat.security.KeyDistributor;
 
 import java.io.Serializable;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
 public class User implements Serializable {
