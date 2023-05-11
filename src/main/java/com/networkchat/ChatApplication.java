@@ -36,7 +36,6 @@ public class ChatApplication extends Application {
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.ENCRYPT_MODE, rsaKey);
 
-
             //compare this!!!
             int[] encrKey = idea.getEncryptKeys();
 

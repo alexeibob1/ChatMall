@@ -62,6 +62,8 @@ public class ClientHandler implements Runnable {
                 finalIdeaEncryptKey[i++] = intBuffer.get();
             }
 
+
+
             dbConnection = new SQLConnection();
             //dbConnection.safePublicKey(connectionID, rsaKey);
             dbConnection.close();

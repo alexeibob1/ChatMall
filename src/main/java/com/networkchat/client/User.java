@@ -1,6 +1,6 @@
 package com.networkchat.client;
 
-import com.networkchat.server.ClientRequest;
+import com.networkchat.packets.ClientRequest;
 
 import java.io.Serializable;
 import java.security.PublicKey;

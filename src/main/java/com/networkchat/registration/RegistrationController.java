@@ -6,10 +6,7 @@ import com.networkchat.client.User;
 import com.networkchat.fxml.Controllable;
 import com.networkchat.fxml.StageManager;
 import com.networkchat.resources.FxmlView;
-import com.networkchat.security.AuthDataEncryptor;
-import com.networkchat.security.KeyDistributor;
-import com.networkchat.server.ClientRequest;
-import com.networkchat.sql.SQLConnection;
+import com.networkchat.packets.ClientRequest;
 import com.networkchat.sql.SqlResultCode;
 import com.networkchat.tooltips.EmailTooltip;
 import com.networkchat.tooltips.UsernameTooltip;
@@ -20,8 +17,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-
-import java.time.LocalDateTime;
 
 public class RegistrationController implements Controllable {
 

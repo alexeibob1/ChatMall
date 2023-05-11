@@ -6,13 +6,10 @@ import com.networkchat.client.User;
 import com.networkchat.fxml.Controllable;
 import com.networkchat.resources.FxmlView;
 import com.networkchat.fxml.StageManager;
-import com.networkchat.security.KeyDistributor;
-import com.networkchat.server.ClientRequest;
-import com.networkchat.sql.SQLConnection;
+import com.networkchat.packets.ClientRequest;
 import com.networkchat.sql.SqlResultCode;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -20,10 +17,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.scene.layout.AnchorPane;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.net.Socket;
 
 public class LoginController implements Controllable {
 

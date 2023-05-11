@@ -4,6 +4,8 @@ module com.networkchat {
     requires java.mail;
     requires java.sql;
     requires mysql.connector.j;
+    requires com.fasterxml.jackson.core;
+    requires com.fasterxml.jackson.databind;
 
 
     opens com.networkchat to javafx.fxml;
@@ -16,4 +18,6 @@ module com.networkchat {
     opens com.networkchat.login to javafx.fxml;
     exports com.networkchat.resources;
     opens com.networkchat.resources to javafx.fxml;
+    exports com.networkchat.json to com.fasterxml.jackson.databind;
+    exports com.networkchat.packets to com.fasterxml.jackson.databind;
 }
