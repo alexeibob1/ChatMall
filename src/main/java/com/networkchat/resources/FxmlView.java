@@ -103,6 +103,38 @@ public enum FxmlView {
         public Parent getRoot() {
             return this.root;
         }
+    },
+
+    CHATROOM {
+        private static final FXMLLoader fxmlLoader = new FXMLLoader(StageManager.class.getResource("/com/networkchat/fxml/chatroom-form.fxml"));
+        private static final Parent root;
+
+        static {
+            try {
+                root = fxmlLoader.load();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        @Override
+        public String getFxmlFile() {
+            return "/com/networkchat/fxml/chatroom-form.fxml";
+        }
+
+        @Override
+        public Class<?> getControllerClass() {
+            return ConfirmationController.class;
+        }
+
+        @Override
+        public FXMLLoader getFxmlLoader() {
+            return fxmlLoader;
+        }
+
+        @Override
+        public Parent getRoot() {
+            return this.root;
+        }
     };
 
     public abstract String getFxmlFile();

@@ -1,17 +1,18 @@
 package com.networkchat.packets.server;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.Serializable;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
+//@JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
 //@JsonSubTypes({
-//        @JsonSubTypes.Type(value = RegistrationClientPacket.class, name = "Registration packet"),
-//        @JsonSubTypes.Type(value = LoginClientPacket.class, name = "Login packet"),
-//        @JsonSubTypes.Type(value = ConfirmationClientPacket.class, name = "Confirmation packet")
+//        @JsonSubTypes.Type(value = ServerPacket.class, name = "Simple server packet"),
 //})
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 
 public class ServerPacket implements Serializable {
     private ServerResponse response;

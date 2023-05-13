@@ -1,12 +1,10 @@
 package com.networkchat.sql;
 
 
-import com.networkchat.client.User;
-import com.networkchat.security.AuthDataEncryptor;
-import com.networkchat.smtp.SSLEmail;
+import com.networkchat.security.RandStringGenerator;
+import com.networkchat.security.SHA256;
 
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.sql.*;
 
 public class SQLConnection {
@@ -71,14 +69,7 @@ public class SQLConnection {
         return SqlResultCode.SUCCESS;
     }
 
-    public void sendConfirmationCode(String username, String email) {
-        String hash = generateVerificationCode();
-        SSLEmail emailConnection = new SSLEmail(username, email);
-        emailConnection.sendConfirmationMessage(hash);
-        safeConfirmationCode(hash, username);
-    }
-
-    private void safeConfirmationCode(String hash, String username) {
+    public void safeConfirmationCode(String hash, String username) {
         try (PreparedStatement stmt = this.connection.prepareStatement(safeConfirmationCodeQuery)) {
             stmt.setString(1, username);
             stmt.setString(2, hash);
@@ -88,10 +79,7 @@ public class SQLConnection {
         }
     }
 
-    private String generateVerificationCode() {
-        SecureRandom random = new SecureRandom();
-        return String.valueOf(random.nextInt(100000, 999999));
-    }
+
 
     public void safeUserData(String username, String email, String salt, String encryptedData) {
         try (PreparedStatement stmt = this.connection.prepareStatement(safeNewUserQuery)) {
@@ -183,7 +171,7 @@ public class SQLConnection {
         if (checkUsernameExistence(username) == SqlResultCode.EXISTING_USERNAME) {
             int userStatus = getUserStatus(username);
             String salt = getSalt(username);
-            String hashedData = AuthDataEncryptor.encryptLoginData(salt, username, password);
+            String hashedData = SHA256.getHashString(salt + username + password);
             try (PreparedStatement stmt = this.connection.prepareStatement(checkUserPassword)) {
                 stmt.setString(1, username);
                 stmt.setString(2, hashedData);

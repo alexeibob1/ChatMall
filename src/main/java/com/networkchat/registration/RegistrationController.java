@@ -23,6 +23,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
+import java.nio.charset.StandardCharsets;
+
 public class RegistrationController implements Controllable {
 
     @FXML
@@ -93,13 +95,12 @@ public class RegistrationController implements Controllable {
         try {
             ClientPacket clientPacket = new RegistrationClientPacket(ClientRequest.REGISTER, eUsername.getText(), eEmail.getText(), SHA256.getHashString(ePassword.getText()));
             Idea idea = new Idea(encryptKey, decryptKey);
-            //this.socket.getOut().writeUnshared(idea.encrypt(clientPacket.jsonSerialize()));
+            this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
             this.socket.getOut().flush();
 
-            String encryptedJson = (String) this.socket.getIn().readObject();
+            byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
 
-            //!!remember to decrypt
-            String decryptedJson = encryptedJson;
+            String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
 
             ServerPacket serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
 

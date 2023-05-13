@@ -19,4 +19,5 @@ module com.networkchat {
     exports com.networkchat.resources;
     opens com.networkchat.resources to javafx.fxml;
     exports com.networkchat.packets.client to com.fasterxml.jackson.databind;
+    exports com.networkchat.packets.server to com.fasterxml.jackson.databind;
 }

@@ -7,12 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.Serializable;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = RegistrationClientPacket.class, name = "Registration packet"),
-        @JsonSubTypes.Type(value = LoginClientPacket.class, name = "Login packet"),
-        @JsonSubTypes.Type(value = ConfirmationClientPacket.class, name = "Confirmation packet")
-})
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 
 public class ClientPacket implements Serializable {
     private ClientRequest request;

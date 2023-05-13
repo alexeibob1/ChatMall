@@ -5,11 +5,17 @@ import com.networkchat.client.ClientSocket;
 import com.networkchat.client.User;
 import com.networkchat.fxml.Controllable;
 import com.networkchat.fxml.StageManager;
+import com.networkchat.packets.client.ClientPacket;
+import com.networkchat.packets.client.ConfirmationClientPacket;
+import com.networkchat.packets.server.ServerPacket;
 import com.networkchat.resources.FxmlView;
 import com.networkchat.packets.client.ClientRequest;
+import com.networkchat.security.idea.Idea;
 import com.networkchat.sql.SqlResultCode;
+import com.networkchat.utils.DialogWindow;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -17,6 +23,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+
+import java.nio.charset.StandardCharsets;
 
 public class ConfirmationController implements Controllable {
 
@@ -69,19 +77,30 @@ public class ConfirmationController implements Controllable {
     void onBtnConfirmClicked(MouseEvent event) {
         eConfirmationCode.setStyle(eConfirmationCode.getStyle().replaceAll(errorStyle, ""));
         try {
-//            user.setRequest(ClientRequest.CONFIRM_REGISTRATION);
-//            user.setPassword("");
-//            user.setConfirmationCode(eConfirmationCode.getText());
-//            this.socket.getOut().writeUnshared(user);
+            //remember to add checkings that entered code is integer
+            int confirmationCode = 0;
+            try {
+                confirmationCode = Integer.parseInt(eConfirmationCode.getText());
+            } catch (Exception e) {
+                eConfirmationCode.setStyle(eConfirmationCode.getStyle() + errorStyle);
+                return;
+            }
+            ClientPacket clientPacket = new ConfirmationClientPacket(ClientRequest.CONFIRM_REGISTRATION, this.username, confirmationCode);
+            Idea idea = new Idea(this.encryptKey, this.decryptKey);
+            this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
             this.socket.getOut().flush();
 
-            Object response = this.socket.getIn().readObject();
+            byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
+            String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
 
-            if (response.getClass() == SqlResultCode.class) {
-                SqlResultCode resultCode = (SqlResultCode) response;
-                if (resultCode == SqlResultCode.WRONG_CODE) {
+            ServerPacket serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
+
+            switch (serverPacket.getResponse()) {
+                case INVALID_CODE -> {
                     eConfirmationCode.setStyle(eConfirmationCode.getStyle() + errorStyle);
-                } else if (resultCode == SqlResultCode.CORRECT_CODE) {
+                }
+                case VALID_CODE -> {
+                    DialogWindow.showDialog(Alert.AlertType.INFORMATION, "Successful registration", "You have submitted your registration", "Now you can sign in and start chatting!");
                     stageManager.switchScene(FxmlView.LOGIN, this.socket, null, encryptKey, decryptKey);
                 }
             }

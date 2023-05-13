@@ -3,30 +3,30 @@ package com.networkchat.packets.client;
 import java.io.Serializable;
 
 public class ConfirmationClientPacket extends ClientPacket implements Serializable {
-    private String email;
-    private String code;
+    private String username;
+    private int code;
 
     public ConfirmationClientPacket() {}
 
-    public ConfirmationClientPacket(ClientRequest request, String email, String code) {
+    public ConfirmationClientPacket(ClientRequest request, String username, int code) {
         super(request);
-        this.email = email;
+        this.username = username;
         this.code = code;
     }
 
-    public String getEmail() {
-        return email;
+    public String getUsername() {
+        return username;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUsername(String email) {
+        this.username = email;
     }
 
-    public String getCode() {
+    public int getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(int code) {
         this.code = code;
     }
 }

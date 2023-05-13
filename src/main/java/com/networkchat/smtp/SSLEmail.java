@@ -13,12 +13,16 @@ public class SSLEmail {
     private final String subject = "Please verify your registration";
     private String username;
     private String email;
-    private String content = "Dear [[name]],\n"
-            + "Please enter the code below in the application to verify your registration:\n\n"
-            + "[[code]]\n\n"
-            + "Remember, that this code is valid for 30 minutes.\n\n" +
-            "Thank you,\n"
-            + "Team of ChatMall application.";
+    private String content = """
+            Dear [[name]],
+            Please enter the code below in the application to verify your registration:
+
+            [[code]]
+
+            Remember, that this code is valid for 30 minutes.
+
+            Thank you,
+            Team of ChatMall application.""";
 
     public SSLEmail(String username, String email) {
         this.username = username;
