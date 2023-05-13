@@ -1,7 +1,6 @@
 package com.networkchat.sql;
 
 
-import com.networkchat.security.RandStringGenerator;
 import com.networkchat.security.SHA256;
 
 import java.security.NoSuchAlgorithmException;

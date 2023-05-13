@@ -2,9 +2,7 @@ package com.networkchat.security.idea;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class Idea {
     private final int rounds = 8;

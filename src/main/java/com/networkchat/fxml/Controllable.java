@@ -1,7 +1,6 @@
 package com.networkchat.fxml;
 
 import com.networkchat.client.ClientSocket;
-import com.networkchat.client.User;
 import javafx.stage.Stage;
 
 public interface Controllable {

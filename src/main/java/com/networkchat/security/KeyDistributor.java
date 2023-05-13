@@ -1,9 +1,9 @@
 package com.networkchat.security;
 
-import com.networkchat.client.User;
 import com.networkchat.sql.SQLConnection;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
@@ -26,15 +26,6 @@ public class KeyDistributor {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);
         return generator.generateKeyPair();
-    }
-
-    private static void safePublicKey(PublicKey key, User user) {
-        user.setPublicKey(key);
-        try (FileOutputStream fileOutputStream = new FileOutputStream("src/main/java/com/networkchat/config/public.key")) {
-            fileOutputStream.write(key.getEncoded());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     private static void safePrivateKey(PrivateKey key, SQLConnection dbConnection, String connectionID) {

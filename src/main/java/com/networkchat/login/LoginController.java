@@ -1,20 +1,16 @@
 package com.networkchat.login;
 
-import com.mysql.cj.log.Log;
 import com.networkchat.ChatApplication;
 import com.networkchat.client.ClientSocket;
-import com.networkchat.client.User;
 import com.networkchat.fxml.Controllable;
+import com.networkchat.fxml.StageManager;
 import com.networkchat.packets.client.ClientPacket;
-import com.networkchat.packets.client.ConfirmationClientPacket;
+import com.networkchat.packets.client.ClientRequest;
 import com.networkchat.packets.client.LoginClientPacket;
 import com.networkchat.packets.server.ServerPacket;
 import com.networkchat.resources.FxmlView;
-import com.networkchat.fxml.StageManager;
-import com.networkchat.packets.client.ClientRequest;
 import com.networkchat.security.SHA256;
 import com.networkchat.security.idea.Idea;
-import com.networkchat.sql.SqlResultCode;
 import com.networkchat.utils.DialogWindow;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -24,8 +20,8 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
-import javafx.stage.Stage;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Stage;
 
 import java.nio.charset.StandardCharsets;
 

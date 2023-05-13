@@ -1,7 +1,5 @@
 package com.networkchat.smtp;
 
-import com.networkchat.client.User;
-
 import javax.mail.Authenticator;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
