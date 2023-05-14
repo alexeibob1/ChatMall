@@ -1,3 +1,68 @@
 #bckgHeader {
     -fx-background-color: #090979FF;
 }
+
+#pAccount, #gpUsers {
+    -fx-background-color: rgba(11, 89, 117, 1);
+}
+
+#lChatWelcome, #lUsername, #lUsers {
+    -fx-font-family: Roboto;
+    -fx-font-weight: bold;
+    -fx-font-size: 25px;
+    -fx-text-fill: white;
+
+}
+
+#lUsername {
+    -fx-font-size: 20px;
+    -fx-font-weight: normal;
+}
+
+#btnChangeUsername {
+    -fx-background-color: #D6B036;
+    -fx-background-radius: 10px;
+    -fx-text-fill: white;
+    -fx-font-family: Roboto;
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+}
+
+#eNewUsername {
+    -fx-prompt-text-fill: rgba(9, 9, 121, 0.7);
+}
+
+.message {
+    -fx-background-radius: 10;
+    -fx-padding: 10;
+}
+
+.sentMessage {
+    -fx-background-color: dodgerblue;
+}
+
+.sentMessageContent {
+    -fx-fill: white;
+}
+
+.receivedMessage {
+    -fx-background-color: lightgray;
+}
+
+.receivedMessageContent {
+    -fx-fill: black;
+}
+
+/*user*/
+.userBlock {
+    -fx-background-radius: 5;
+    -fx-padding: 10;
+    -fx-background-color: #facd6b;
+}
+
+.username {
+    -fx-fill: black;
+    -fx-font-family: Roboto;
+    -fx-font-weight: normal;
+    -fx-font-size: 17px;
+}

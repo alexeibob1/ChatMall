@@ -9,16 +9,9 @@ import java.security.SecureRandom;
 
 public class RandStringGenerator {
 
-    public static String encryptLoginData(String salt, String username, String password) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        String message = salt + username + password;
-        byte[] hash = digest.digest(message.getBytes(StandardCharsets.UTF_8));
-        return HexConverter.bytesToHex(hash);
-    }
-
     public static String generateSalt() {
         SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[8];
+        byte[] salt = new byte[32];
         random.nextBytes(salt);
         return HexConverter.bytesToHex(salt);
     }

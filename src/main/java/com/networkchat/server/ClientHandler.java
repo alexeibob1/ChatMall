@@ -1,9 +1,9 @@
 package com.networkchat.server;
 
+import com.networkchat.client.ClientSocket;
+import com.networkchat.client.ClientStatus;
 import com.networkchat.packets.client.*;
-import com.networkchat.packets.server.PublicKeyServerPacket;
-import com.networkchat.packets.server.ServerPacket;
-import com.networkchat.packets.server.ServerResponse;
+import com.networkchat.packets.server.*;
 import com.networkchat.security.KeyDistributor;
 import com.networkchat.security.RandStringGenerator;
 import com.networkchat.security.SHA256;
@@ -21,12 +21,17 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ClientHandler implements Runnable {
-    private final Socket socket;
+    private final ClientSocket socket;
 
-    public ClientHandler(Socket socket) {
+    private final Map<ClientSocket, ClientInfo> clients;
+
+    public ClientHandler(ClientSocket socket, Map<ClientSocket, ClientInfo> clients) {
         this.socket = socket;
+        this.clients = clients;
     }
 
     public void run() {
@@ -40,8 +45,8 @@ public class ClientHandler implements Runnable {
             e.printStackTrace();
         }
 
-        try (ObjectOutputStream out = new ObjectOutputStream(this.socket.getOutputStream());
-             ObjectInputStream in = new ObjectInputStream(this.socket.getInputStream())) {
+        try (ObjectOutputStream out = this.socket.getOut();
+             ObjectInputStream in = this.socket.getIn()) {
 
             KeyPair keyPair = KeyDistributor.getKeyPair();
             PublicKey publicKey = keyPair.getPublic();
@@ -57,6 +62,7 @@ public class ClientHandler implements Runnable {
             int[] encryptionKey = ByteArrayConverter.byteArrayToIntArray(decipher.doFinal(((IdeaKeysClientPacket) clientPacket).getEncryptKey()));
             int[] decryptionKey = ByteArrayConverter.byteArrayToIntArray(decipher.doFinal(((IdeaKeysClientPacket) clientPacket).getDecryptKey()));
             Idea idea = new Idea(encryptionKey, decryptionKey);
+            clients.put(this.socket, new ClientInfo(ClientStatus.NOT_LOGGED_IN, "", encryptionKey, decryptionKey));
 
             while (true) {
                 byte[] encryptedJson = (byte[]) in.readObject();
@@ -90,7 +96,8 @@ public class ClientHandler implements Runnable {
                                 dbConnection.safeConfirmationCode(hash, username);
                             }
                         }
-                    } case LOGIN -> {
+                    }
+                    case LOGIN -> {
                         String username = ((LoginClientPacket) clientPacket).getUsername();
                         String password = ((LoginClientPacket) clientPacket).getPassword();
                         SqlResultCode accessPermission = dbConnection.checkPermission(username, password);
@@ -106,9 +113,25 @@ public class ClientHandler implements Runnable {
                             case ALLOW_LOGIN -> {
                                 out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.LOGIN_ALLOWED).jsonSerialize().getBytes(), true));
                                 out.flush();
+                                synchronized (clients) {
+                                    clients.get(this.socket).setStatus(ClientStatus.LOGGED_IN);
+                                    clients.get(this.socket).setUsername(username);
+                                    for (ClientSocket s : clients.keySet()) {
+                                        if (clients.get(s).getStatus() == ClientStatus.LOGGED_IN) {
+                                            Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
+                                            s.getOut().writeUnshared(clientCipher.crypt(new UserConnectionServerPacket(ServerResponse.NEW_USER_CONNECTED, username)
+                                                    .jsonSerialize().getBytes(), true));
+                                            s.getOut().flush();
+                                        }
+                                    }
+                                }
+
+//                                //you should broadcast message to all users connected to chat, that new user has connected
+//                                out.flush();
                             }
                         }
-                    } case CONFIRM_REGISTRATION -> {
+                    }
+                    case CONFIRM_REGISTRATION -> {
                         String username = ((ConfirmationClientPacket) clientPacket).getUsername();
                         int code = ((ConfirmationClientPacket) clientPacket).getCode();
                         SqlResultCode codeCorrectness = dbConnection.checkConfirmationCode(username, code);
@@ -122,6 +145,8 @@ public class ClientHandler implements Runnable {
                                 out.flush();
                             }
                         }
+                    } case MESSAGE -> {
+
                     }
                 }
 
