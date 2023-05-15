@@ -5,18 +5,17 @@ import com.networkchat.client.ClientSocket;
 import com.networkchat.fxml.Controllable;
 import com.networkchat.fxml.StageManager;
 import com.networkchat.packets.client.ClientPacket;
+import com.networkchat.packets.client.ClientRequest;
+import com.networkchat.packets.client.MessageClientPacket;
+import com.networkchat.packets.server.MessageServerPacket;
+import com.networkchat.packets.server.MessageStatus;
 import com.networkchat.packets.server.ServerPacket;
 import com.networkchat.packets.server.UserConnectionServerPacket;
 import com.networkchat.resources.FxmlView;
 import com.networkchat.security.idea.Idea;
-import com.networkchat.utils.DialogWindow;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
@@ -28,10 +27,10 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 public class ChatroomController implements Controllable {
 
@@ -95,64 +94,15 @@ public class ChatroomController implements Controllable {
         this.stage.setIconified(true);
     }
 
+    @FXML
+    void onFormDragEntered(MouseEvent event) {
+        this.stageManager.onFormDragEntered(event);
+    }
 
-
-//    @FXML
-//    void onBtnAddClicked(MouseEvent event) {
-    //add username to list of users
-//        Text username = new Text("HERE USERNAME WILL BE");
-//        TextFlow messageFlow = new TextFlow(username);
-//        username.getStyleClass().add("username");
-//        messageFlow.getStyleClass().addAll("userBlock");
-//        messageFlow.setLineSpacing(2);
-//        int columnIndex = 0;
-//        int columnSpan = 1;
-//        int rowIndex = gpUsers.getRowCount();
-//        int rowSpan = 1;
-//        VBox vBox = new VBox(messageFlow);
-//        vBox.setPadding(new Insets(5));
-//        gpUsers.add(vBox, columnIndex, rowIndex, columnSpan, rowSpan);
-//    }
-
-
-//    @FXML
-//    void onBtnSendMeClicked(MouseEvent event) {
-//        Text message = new Text(eMessageMe.getText());
-//        TextFlow messageFlow = new TextFlow(message);
-//        message.getStyleClass().add("sendMessageContent");
-//        messageFlow.getStyleClass().addAll("sentMessage", "message");
-//        messageFlow.setLineSpacing(2);
-//
-//        ZonedDateTime time = ZonedDateTime.now();
-//        Text recordDate = new Text(time.format(DateTimeFormatter.ofPattern("hh : mm a ")));
-//        int columnIndex = 1;
-//        int columnSpan = 2;
-//        int rowIndex = gpMessages.getRowCount();
-//        int rowSpan = 1;
-//        VBox vBox = new VBox(messageFlow, recordDate);
-//        vBox.setPadding(new Insets(10));
-//        gpMessages.add(vBox, columnIndex, rowIndex, columnSpan, rowSpan);
-//    }
-//
-//    @FXML
-//    void onBtnSendNotMeClicked(MouseEvent event) {
-//        Text message = new Text(eMessageNotMe.getText());
-//        TextFlow messageFlow = new TextFlow(message);
-//        message.getStyleClass().add("receivedMessageContent");
-//        messageFlow.getStyleClass().addAll("receivedMessage", "message");
-//        messageFlow.setLineSpacing(2);
-//
-//        ZonedDateTime time = ZonedDateTime.now();
-//        Text recordDate = new Text(time.format(DateTimeFormatter.ofPattern("hh : mm a ")));
-//        int columnIndex = 0;
-//        int columnSpan = 2;
-//        int rowIndex = gpMessages.getRowCount();
-//        int rowSpan = 1;
-//        VBox vBox = new VBox(messageFlow, recordDate);
-//        vBox.setPadding(new Insets(10));
-//        gpMessages.add(vBox, columnIndex, rowIndex, columnSpan, rowSpan);
-//    }
-
+    @FXML
+    void onMousePressed(MouseEvent event) {
+        this.stageManager.onMousePressed(event);
+    }
 
 
     @Override
@@ -194,14 +144,12 @@ public class ChatroomController implements Controllable {
         eMessage.setText("");
         gpUsers.getChildren().clear();
         gpMessages.getChildren().clear();
-        //Platform.runLater(this::startListening);
         new Thread(() -> {
             Idea idea = new Idea(this.encryptKey, this.decryptKey);
             ServerPacket serverPacket = null;
             ClientPacket clientPacket = null;
             try {
                 while (true) {
-//                    (encryptedJson = (byte[]) this.socket.getIn().readObject()) != null
                     byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
                     String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
                     serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
@@ -223,6 +171,56 @@ public class ChatroomController implements Controllable {
                             });
                             System.out.println(username.getText() + " connected to chat");
                         }
+                        case MESSAGE -> {
+                            MessageStatus status = ((MessageServerPacket)serverPacket).getMessageStatus();
+                            String message = ((MessageServerPacket)serverPacket).getMessage();
+                            String sender = ((MessageServerPacket)serverPacket).getSender();
+                            ZonedDateTime dateTime = ((MessageServerPacket)serverPacket).getDateTime();
+                            switch (status) {
+                                case IS_GET -> {
+                                    Text messageText = new Text(message);
+                                    TextFlow messageFlow = new TextFlow(messageText);
+                                    messageText.getStyleClass().add("receivedMessageContent");
+                                    messageFlow.getStyleClass().addAll("receivedMessage", "message");
+                                    messageFlow.setLineSpacing(2);
+
+                                    Text senderText = new Text(sender);
+
+                                    ZonedDateTime time = dateTime;
+                                    Text recordDate = new Text(time.format(DateTimeFormatter.ofPattern("hh : mm a ")));
+                                    int columnIndex = 0;
+                                    int columnSpan = 2;
+                                    int rowIndex = gpMessages.getRowCount();
+                                    int rowSpan = 1;
+                                    VBox vBox = new VBox(senderText, messageFlow, recordDate);
+                                    vBox.setPadding(new Insets(10));
+                                    Platform.runLater(() -> {
+                                        gpMessages.add(vBox, columnIndex, rowIndex, columnSpan, rowSpan);
+                                    });
+                                }
+                                case IS_SENT -> {
+                                    Text messageText = new Text(message);
+                                    TextFlow messageFlow = new TextFlow(messageText);
+                                    messageText.getStyleClass().add("sendMessageContent");
+                                    messageFlow.getStyleClass().addAll("sentMessage", "message");
+                                    messageFlow.setLineSpacing(2);
+
+                                    Text senderText = new Text(sender);
+
+                                    ZonedDateTime time = dateTime;
+                                    Text recordDate = new Text(time.format(DateTimeFormatter.ofPattern("hh : mm a ")));
+                                    int columnIndex = 1;
+                                    int columnSpan = 2;
+                                    int rowIndex = gpMessages.getRowCount();
+                                    int rowSpan = 1;
+                                    VBox vBox = new VBox(senderText, messageFlow, recordDate);
+                                    vBox.setPadding(new Insets(10));
+                                    Platform.runLater(() -> {
+                                        gpMessages.add(vBox, columnIndex, rowIndex, columnSpan, rowSpan);
+                                    });
+                                }
+                            }
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -231,36 +229,12 @@ public class ChatroomController implements Controllable {
         }).start();
     }
 
-    public void startListening() {
+    @FXML
+    void onBtnSendClicked(MouseEvent event) throws IOException {
+        String message = eMessage.getText();
+        ClientPacket clientPacket = new MessageClientPacket(ClientRequest.MESSAGE, username, message, ZonedDateTime.now());
         Idea idea = new Idea(this.encryptKey, this.decryptKey);
-        ServerPacket serverPacket = null;
-        ClientPacket clientPacket = null;
-        byte[] encryptedJson = null;
-        try {
-            while ((encryptedJson = (byte[]) this.socket.getIn().readObject()) != null) {
-                //byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
-                String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
-                serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
-                switch (serverPacket.getResponse()) {
-                    case NEW_USER_CONNECTED -> {
-                        Text username = new Text(((UserConnectionServerPacket)serverPacket).getUsername());
-                        TextFlow messageFlow = new TextFlow(username);
-                        username.getStyleClass().add("username");
-                        messageFlow.getStyleClass().addAll("userBlock");
-                        messageFlow.setLineSpacing(2);
-                        int columnIndex = 0;
-                        int columnSpan = 1;
-                        int rowIndex = gpUsers.getRowCount();
-                        int rowSpan = 1;
-                        VBox vBox = new VBox(messageFlow);
-                        vBox.setPadding(new Insets(5));
-                        gpUsers.add(vBox, columnIndex, rowIndex, columnSpan, rowSpan);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
+        this.socket.getOut().flush();
     }
 }

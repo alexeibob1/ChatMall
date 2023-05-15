@@ -16,13 +16,13 @@ import com.networkchat.utils.ByteArrayConverter;
 import javax.crypto.Cipher;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.HashMap;
+import java.time.ZonedDateTime;
 import java.util.Map;
+import java.util.Objects;
 
 public class ClientHandler implements Runnable {
     private final ClientSocket socket;
@@ -125,9 +125,6 @@ public class ClientHandler implements Runnable {
                                         }
                                     }
                                 }
-
-//                                //you should broadcast message to all users connected to chat, that new user has connected
-//                                out.flush();
                             }
                         }
                     }
@@ -146,7 +143,22 @@ public class ClientHandler implements Runnable {
                             }
                         }
                     } case MESSAGE -> {
-
+                        String sender = ((MessageClientPacket) clientPacket).getSender();
+                        String message = ((MessageClientPacket) clientPacket).getMessage();
+                        ZonedDateTime dateTime = ((MessageClientPacket) clientPacket).getDateTime();
+                        MessageServerPacket serverPacket = new MessageServerPacket(ServerResponse.MESSAGE, sender, message, dateTime);
+                        synchronized (clients) {
+                            for (ClientSocket s : clients.keySet()) {
+                                if (Objects.equals(clients.get(s).getUsername(), sender)) {
+                                    serverPacket.setMessageStatus(MessageStatus.IS_SENT);
+                                } else {
+                                    serverPacket.setMessageStatus(MessageStatus.IS_GET);
+                                }
+                                Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
+                                s.getOut().writeUnshared(clientCipher.crypt(serverPacket.jsonSerialize().getBytes(), true));
+                                s.getOut().flush();
+                            }
+                        }
                     }
                 }
 

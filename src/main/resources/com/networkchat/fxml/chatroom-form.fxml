@@ -16,7 +16,7 @@
 
 <AnchorPane prefHeight="914.0" prefWidth="1235.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.networkchat.chat.ChatroomController">
    <children>
-      <Pane fx:id="bckgHeader" prefHeight="42.0" prefWidth="1236.0">
+      <Pane fx:id="bckgHeader" onMouseDragged="#onFormDragEntered" onMousePressed="#onMousePressed" prefHeight="42.0" prefWidth="1236.0">
          <children>
             <ImageView fx:id="btnClose" fitHeight="25.0" fitWidth="25.0" layoutX="1196.0" layoutY="8.0" onMouseClicked="#onBtnCloseClicked" pickOnBounds="true" preserveRatio="true">
                <image>
@@ -74,7 +74,7 @@
          </content>
       </ScrollPane>
       <TextArea fx:id="eMessage" layoutX="304.0" layoutY="871.0" prefHeight="42.0" prefWidth="564.0" promptText="Write your message here..." />
-      <Button fx:id="btnSend" layoutX="869.0" layoutY="871.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="108.0" text="Send" />
+      <Button fx:id="btnSend" layoutX="869.0" layoutY="871.0" mnemonicParsing="false" onMouseClicked="#onBtnSendClicked" prefHeight="42.0" prefWidth="108.0" text="Send" />
       <Label fx:id="lUsers" layoutX="999.0" layoutY="54.0" prefHeight="35.0" prefWidth="218.0" text="NOW IN THE CHAT" />
    </children>
 </AnchorPane>

@@ -1,20 +1,23 @@
-package com.networkchat.packets.client;
+package com.networkchat.packets.server;
 
-import com.networkchat.packets.server.MessageStatus;
+import com.networkchat.packets.client.ClientPacket;
+import com.networkchat.packets.client.ClientRequest;
 
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 
-public class MessageClientPacket extends ClientPacket implements Serializable {
+public class MessageServerPacket extends ServerPacket implements Serializable {
     private String sender;
     private String message;
 
     private ZonedDateTime dateTime;
 
-    public MessageClientPacket() {}
+    private MessageStatus messageStatus;
 
-    public MessageClientPacket(ClientRequest request, String sender, String message, ZonedDateTime dateTime) {
-        super(request);
+    public MessageServerPacket() {}
+
+    public MessageServerPacket(ServerResponse response, String sender, String message, ZonedDateTime dateTime) {
+        super(response);
         this.sender = sender;
         this.message = message;
         this.dateTime = dateTime;
@@ -44,4 +47,11 @@ public class MessageClientPacket extends ClientPacket implements Serializable {
         this.dateTime = dateTime;
     }
 
+    public MessageStatus getMessageStatus() {
+        return messageStatus;
+    }
+
+    public void setMessageStatus(MessageStatus messageStatus) {
+        this.messageStatus = messageStatus;
+    }
 }
