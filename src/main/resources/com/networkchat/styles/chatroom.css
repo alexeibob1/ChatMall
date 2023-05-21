@@ -19,7 +19,7 @@
     -fx-font-weight: normal;
 }
 
-#btnChangeUsername {
+#btnDeleteAccount, #btnSend {
     -fx-background-color: #D6B036;
     -fx-background-radius: 10px;
     -fx-text-fill: white;
@@ -28,41 +28,55 @@
     -fx-font-weight: bold;
 }
 
-#eNewUsername {
-    -fx-prompt-text-fill: rgba(9, 9, 121, 0.7);
+#eMessage {
+    -fx-font-family: Roboto;
+    -fx-font-size: 16px;
+    -fx-background-color: white;
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+    -fx-border-color: #51515e;
+    -fx-text-fill: #02022d;
+    -fx-prompt-text-fill: #7f7fa2;
 }
 
 .message {
     -fx-background-radius: 10;
-    -fx-padding: 10;
+    -fx-padding: 10px;
 }
 
 .sentMessage {
-    -fx-background-color: dodgerblue;
-}
-
-.sentMessageContent {
-    -fx-fill: white;
+    -fx-background-color: #b8ecf5;
 }
 
 .receivedMessage {
-    -fx-background-color: lightgray;
+    -fx-background-color: #fcd9ea;
 }
 
-.receivedMessageContent {
-    -fx-fill: black;
+.receivedPersonalMessage {
+    -fx-background-color: #88ff94;
 }
 
 /*user*/
 .userBlock {
     -fx-background-radius: 5;
-    -fx-padding: 10;
+    -fx-padding: 5px;
+}
+
+.userMe {
     -fx-background-color: #facd6b;
 }
 
-.username {
+.userNotMe {
+    -fx-background-color: #ff93f4;
+}
+
+.username, .sender, .date, .messageContent {
     -fx-fill: black;
     -fx-font-family: Roboto;
     -fx-font-weight: normal;
     -fx-font-size: 17px;
+}
+
+.sender, .date {
+    -fx-font-size: 15px;
 }

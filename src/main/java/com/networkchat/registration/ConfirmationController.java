@@ -11,6 +11,8 @@ import com.networkchat.packets.server.ServerPacket;
 import com.networkchat.resources.FxmlView;
 import com.networkchat.security.idea.Idea;
 import com.networkchat.utils.DialogWindow;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -18,6 +20,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
@@ -50,13 +53,15 @@ public class ConfirmationController implements Controllable {
     @FXML
     private Label lValidTime;
 
-    private String errorStyle = "-fx-border-radius: 5px;\n" +
+    private final String errorStyle = "-fx-border-radius: 5px;\n" +
             "-fx-border-color: red;\n" +
             "-fx-border-width: 2px;";
 
-    private String correctStyle = "-fx-border-radius: 5px;\n" +
+    private final String correctStyle = "-fx-border-radius: 5px;\n" +
             "-fx-border-color: green;\n" +
             "-fx-border-width: 2px;";
+
+    private final int CODE_LENGTH = 6;
 
     Stage stage;
 
@@ -72,13 +77,26 @@ public class ConfirmationController implements Controllable {
     }
 
     @FXML
+    void onFormDragEntered(MouseEvent event) {
+        this.stageManager.onFormDragEntered(event);
+    }
+
+    @FXML
+    void onMousePressed(MouseEvent event) {
+        this.stageManager.onMousePressed(event);
+    }
+
+    @FXML
     void onBtnConfirmClicked(MouseEvent event) {
         eConfirmationCode.setStyle(eConfirmationCode.getStyle().replaceAll(errorStyle, ""));
+        checkConfirmationCode(eConfirmationCode.getText());
+    }
+
+    private void checkConfirmationCode(String strCode) {
         try {
-            //remember to add checkings that entered code is integer
-            int confirmationCode = 0;
+            int confirmationCode;
             try {
-                confirmationCode = Integer.parseInt(eConfirmationCode.getText());
+                confirmationCode = Integer.parseInt(strCode);
             } catch (Exception e) {
                 eConfirmationCode.setStyle(eConfirmationCode.getStyle() + errorStyle);
                 return;
@@ -87,12 +105,9 @@ public class ConfirmationController implements Controllable {
             Idea idea = new Idea(this.encryptKey, this.decryptKey);
             this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
             this.socket.getOut().flush();
-
             byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
             String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
-
             ServerPacket serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
-
             switch (serverPacket.getResponse()) {
                 case INVALID_CODE -> {
                     eConfirmationCode.setStyle(eConfirmationCode.getStyle() + errorStyle);
@@ -148,5 +163,11 @@ public class ConfirmationController implements Controllable {
         eConfirmationCode.setText("");
         eConfirmationCode.setStyle(eConfirmationCode.getStyle().replaceAll(errorStyle, ""));
         eConfirmationCode.setStyle(eConfirmationCode.getStyle().replaceAll(correctStyle, ""));
+        eConfirmationCode.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (eConfirmationCode.getText().length() > CODE_LENGTH) {
+                String s = eConfirmationCode.getText().substring(0, CODE_LENGTH);
+                eConfirmationCode.setText(s);
+            }
+        });
     }
 }

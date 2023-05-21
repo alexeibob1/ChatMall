@@ -13,12 +13,12 @@ import com.networkchat.security.SHA256;
 import com.networkchat.security.idea.Idea;
 import com.networkchat.tooltips.EmailTooltip;
 import com.networkchat.tooltips.UsernameTooltip;
+import com.networkchat.utils.DialogWindow;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
@@ -62,6 +62,8 @@ public class RegistrationController implements Controllable {
             "-fx-border-color: red;\n" +
             "-fx-border-width: 2px;";
 
+    private static final String ALLOWED_PATTERN = "[a-zA-Z0-9@.$\\-+]";
+
     Stage stage;
     StageManager stageManager;
     ClientSocket socket;
@@ -93,6 +95,10 @@ public class RegistrationController implements Controllable {
     @FXML
     void onBtnSignUpClicked(MouseEvent event) {
         removeTooltips();
+        if (eUsername.getText().isEmpty() || ePassword.getText().isEmpty() || eEmail.getText().isEmpty()) {
+            DialogWindow.showDialog(Alert.AlertType.ERROR, "Error!", "Enter text in all fields", "Sorry, invalid input.");
+            return;
+        }
         try {
             ClientPacket clientPacket = new RegistrationClientPacket(ClientRequest.REGISTER, eUsername.getText(), eEmail.getText(), SHA256.getHashString(ePassword.getText()));
             Idea idea = new Idea(encryptKey, decryptKey);
@@ -163,9 +169,17 @@ public class RegistrationController implements Controllable {
         Scene scene = this.stage.getScene();
         scene.getStylesheets().add(ChatApplication.class.getResource("styles/login.css").toExternalForm());
         cleanFields();
-        ePassword.setText("12345678");
-        eEmail.setText("funnyguylo0937@gmail.com");
-        eUsername.setText("alexeibob");
+        setKeyFilter(eEmail);
+        setKeyFilter(eUsername);
+        setKeyFilter(ePassword);
+    }
+
+    private void setKeyFilter(TextField field) {
+        field.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (!newValue.matches(ALLOWED_PATTERN)) {
+                field.setText(newValue.replaceAll("[^" + ALLOWED_PATTERN + "]", ""));
+            }
+        });
     }
 
     private void cleanFields() {

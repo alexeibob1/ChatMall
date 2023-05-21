@@ -12,8 +12,12 @@ import com.networkchat.smtp.SSLEmail;
 import com.networkchat.sql.SQLConnection;
 import com.networkchat.sql.SqlResultCode;
 import com.networkchat.utils.ByteArrayConverter;
+import com.networkchat.utils.DialogWindow;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 
 import javax.crypto.Cipher;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +25,7 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
@@ -28,23 +33,16 @@ public class ClientHandler implements Runnable {
     private final ClientSocket socket;
 
     private final Map<ClientSocket, ClientInfo> clients;
+    private final SQLConnection dbConnection;
 
-    public ClientHandler(ClientSocket socket, Map<ClientSocket, ClientInfo> clients) {
+    public ClientHandler(ClientSocket socket, Map<ClientSocket, ClientInfo> clients, SQLConnection dbConnection) {
+        this.dbConnection = dbConnection;
         this.socket = socket;
         this.clients = clients;
     }
 
     public void run() {
-        SQLConnection dbConnection = null;
-        ClientPacket clientPacket = null;
-
-        try {
-            dbConnection = new SQLConnection();
-        } catch (Exception e) {
-            System.err.println("Unable to connect to server database");
-            e.printStackTrace();
-        }
-
+        ClientPacket clientPacket;
         try (ObjectOutputStream out = this.socket.getOut();
              ObjectInputStream in = this.socket.getIn()) {
 
@@ -87,13 +85,23 @@ public class ClientHandler implements Runnable {
                             case SUCCESS -> {
                                 String salt = RandStringGenerator.generateSalt();
                                 String encryptedData = SHA256.getHashString(salt + username + password);
-                                dbConnection.safeUserData(username, email, salt, encryptedData);
-                                out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.SUCCESSFUL_REGISTRATION).jsonSerialize().getBytes(), true));
-                                out.flush();
-                                String hash = RandStringGenerator.generateVerificationCode();
                                 SSLEmail emailConnection = new SSLEmail(username, email);
-                                emailConnection.sendConfirmationMessage(hash);
-                                dbConnection.safeConfirmationCode(hash, username);
+                                String hash = RandStringGenerator.generateVerificationCode();
+                                boolean errorFlag = false;
+                                try {
+                                    emailConnection.sendConfirmationMessage(hash);
+                                } catch (Exception e) {
+                                    out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.REPEATED_EMAIL).jsonSerialize().getBytes(), true));
+                                    out.flush();
+                                    errorFlag = true;
+                                }
+
+                                if (!errorFlag) {
+                                    dbConnection.safeUserData(username, email, salt, encryptedData);
+                                    out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.SUCCESSFUL_REGISTRATION).jsonSerialize().getBytes(), true));
+                                    out.flush();
+                                    dbConnection.safeConfirmationCode(hash, username);
+                                }
                             }
                         }
                     }
@@ -111,19 +119,19 @@ public class ClientHandler implements Runnable {
                                 out.flush();
                             }
                             case ALLOW_LOGIN -> {
-                                out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.LOGIN_ALLOWED).jsonSerialize().getBytes(), true));
-                                out.flush();
-                                synchronized (clients) {
-                                    clients.get(this.socket).setStatus(ClientStatus.LOGGED_IN);
-                                    clients.get(this.socket).setUsername(username);
-                                    for (ClientSocket s : clients.keySet()) {
-                                        if (clients.get(s).getStatus() == ClientStatus.LOGGED_IN) {
-                                            Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
-                                            s.getOut().writeUnshared(clientCipher.crypt(new UserConnectionServerPacket(ServerResponse.NEW_USER_CONNECTED, username)
-                                                    .jsonSerialize().getBytes(), true));
-                                            s.getOut().flush();
-                                        }
+                                ArrayList<String> usernames = getListOfLoggedUsernames();
+                                if (!usernames.contains(username)) {
+                                    synchronized (clients) {
+                                        clients.get(this.socket).setStatus(ClientStatus.LOGGED_IN);
+                                        clients.get(this.socket).setUsername(username);
                                     }
+                                    out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.LOGIN_ALLOWED).jsonSerialize().getBytes(), true));
+                                    out.flush();
+                                    usernames.add(username);
+                                    broadcastUsersList(usernames);
+                                } else {
+                                    out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.ALREADY_LOGGED_IN).jsonSerialize().getBytes(), true));
+                                    out.flush();
                                 }
                             }
                         }
@@ -142,33 +150,105 @@ public class ClientHandler implements Runnable {
                                 out.flush();
                             }
                         }
-                    } case MESSAGE -> {
+                    }
+                    case MESSAGE -> {
                         String sender = ((MessageClientPacket) clientPacket).getSender();
                         String message = ((MessageClientPacket) clientPacket).getMessage();
                         ZonedDateTime dateTime = ((MessageClientPacket) clientPacket).getDateTime();
-                        MessageServerPacket serverPacket = new MessageServerPacket(ServerResponse.MESSAGE, sender, message, dateTime);
-                        synchronized (clients) {
-                            for (ClientSocket s : clients.keySet()) {
-                                if (Objects.equals(clients.get(s).getUsername(), sender)) {
-                                    serverPacket.setMessageStatus(MessageStatus.IS_SENT);
-                                } else {
-                                    serverPacket.setMessageStatus(MessageStatus.IS_GET);
+                        ArrayList<String> usernames = getListOfLoggedUsernames();
+                        boolean isPersonalMessage = false;
+                        String personalGetter = "";
+                        if (message.trim().startsWith("@") && usernames.contains(message.trim().split(" ")[0].trim().replaceAll("@", ""))) {
+                            personalGetter = message.split(" ")[0].trim().replaceAll("@", "");
+                            if (!personalGetter.equals(clients.get(socket).getUsername())) {
+                                isPersonalMessage = true;
+                            }
+                        }
+                        if (isPersonalMessage) {
+                            String tempMessage = message;
+                            message = message.replaceFirst("@" + personalGetter, "").trim();
+                            if (!message.isEmpty()) {
+                                synchronized (clients) {
+                                    for (ClientSocket s : clients.keySet()) {
+                                        if (Objects.equals(clients.get(s).getUsername(), personalGetter)) {
+                                            MessageServerPacket serverPacket = new MessageServerPacket(ServerResponse.MESSAGE, sender, message, dateTime);
+                                            serverPacket.setMessageStatus(MessageStatus.IS_PERSONAL_GET);
+                                            Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
+                                            s.getOut().writeUnshared(clientCipher.crypt(serverPacket.jsonSerialize().getBytes(), true));
+                                            s.getOut().flush();
+                                        } else if (Objects.equals(clients.get(s).getUsername(), sender)) {
+                                            MessageServerPacket serverPacket = new MessageServerPacket(ServerResponse.MESSAGE, sender, tempMessage.trim(), dateTime);
+                                            serverPacket.setMessageStatus(MessageStatus.IS_SENT);
+                                            Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
+                                            s.getOut().writeUnshared(clientCipher.crypt(serverPacket.jsonSerialize().getBytes(), true));
+                                            s.getOut().flush();
+                                        }
+                                    }
                                 }
-                                Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
-                                s.getOut().writeUnshared(clientCipher.crypt(serverPacket.jsonSerialize().getBytes(), true));
-                                s.getOut().flush();
+                            }
+                        } else {
+                            MessageServerPacket serverPacket = new MessageServerPacket(ServerResponse.MESSAGE, sender, message, dateTime);
+                            synchronized (clients) {
+                                for (ClientSocket s : clients.keySet()) {
+                                    if (clients.get(s).getStatus() == ClientStatus.LOGGED_IN) {
+                                        if (Objects.equals(clients.get(s).getUsername(), sender)) {
+                                            serverPacket.setMessageStatus(MessageStatus.IS_SENT);
+                                        } else {
+                                            serverPacket.setMessageStatus(MessageStatus.IS_GET);
+                                        }
+                                        Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
+                                        s.getOut().writeUnshared(clientCipher.crypt(serverPacket.jsonSerialize().getBytes(), true));
+                                        s.getOut().flush();
+                                    }
+                                }
                             }
                         }
                     }
+                    case DISCONNECT -> {
+                        System.out.println("Client disconnected");
+                        clients.get(this.socket).setStatus(ClientStatus.NOT_LOGGED_IN);
+                        out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.DISCONNECTED).jsonSerialize().getBytes(), true));
+                        out.flush();
+                        ArrayList<String> usernames = getListOfLoggedUsernames();
+                        broadcastUsersList(usernames);
+                    }
                 }
-
             }
         } catch (Exception e) {
+            System.out.println("Client disconnected");
+            clients.remove(this.socket);
             try {
-                assert dbConnection != null;
-                dbConnection.close();
-            } catch (Exception e1) {
-                e1.printStackTrace();
+                this.socket.getSocket().close();
+                ArrayList<String> usernames = getListOfLoggedUsernames();
+                broadcastUsersList(usernames);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+        }
+    }
+
+    private ArrayList<String> getListOfLoggedUsernames() {
+        ArrayList<String> usernames = new ArrayList<>();
+        synchronized (clients) {
+            for (ClientSocket s : clients.keySet()) {
+                if (clients.get(s).getStatus() == ClientStatus.LOGGED_IN) {
+                    usernames.add(clients.get(s).getUsername());
+                }
+            }
+        }
+        return usernames;
+    }
+
+    private void broadcastUsersList(ArrayList<String> usernames) throws IOException {
+        synchronized (clients) {
+            for (ClientSocket s : clients.keySet()) {
+                if (clients.get(s).getStatus() == ClientStatus.LOGGED_IN) {
+                    Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
+                    s.getOut().writeUnshared(clientCipher.crypt(new UserConnectionServerPacket(ServerResponse.NEW_USER_CONNECTED, usernames)
+                            .jsonSerialize().getBytes(), true));
+                    s.getOut().flush();
+                }
             }
         }
     }

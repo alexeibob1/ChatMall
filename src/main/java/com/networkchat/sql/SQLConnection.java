@@ -5,15 +5,14 @@ import com.networkchat.security.SHA256;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
+import java.util.Objects;
 
 public class SQLConnection {
     private Connection connection;
-    private final String DB_ADDRESS = "jdbc:mysql://localhost:3306/chatmall";
+    private final String DB_ADDRESS = "jdbc:mysql://chatmall.server.com:3306/chatmall";
     private final String ADMIN_USERNAME = "root";
     private final String ADMIN_PASSWORD = "";
 
-    //SQL Queries
-    //private final String safePrivateKeyQuery = "INSERT INTO `private_keys` (username, rsa_key) VALUES (?, ?)";
     private final String safeNewUserQuery = "INSERT INTO `users_auth` (username, email, salt, password, enabled) " +
                                             "VALUES (?, ?, ?, ?, ?)";
 
@@ -34,13 +33,7 @@ public class SQLConnection {
 
     private final String getUserStatusQuery = "SELECT enabled FROM `users_auth` WHERE username=? LIMIT 1";
 
-    private final String checkUserPassword = "SELECT * FROM `users_auth` WHERE username=? AND password=? LIMIT 1";
-
-    private final String getEmailQuery = "SELECT email FROM `users_auth` WHERE username=?";
-
-    private final String safePublicKeyQuery = "INSERT INTO `public_keys` (connection_id, rsa_key) VALUES (?, ?)";
-
-    private final String deletePublicKeyQuery = "DELETE FROM `public_keys` WHERE connection_id=?";
+    private final String getHashedDataQuery = "SELECT password FROM `users_auth` WHERE username=? LIMIT 1";
 
     public SQLConnection() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.cj.jdbc.Driver");
@@ -48,12 +41,10 @@ public class SQLConnection {
     }
 
     public SqlResultCode checkNewUserInfo(String username, String email) {
-        //check for existing username
         if (checkUsernameExistence(username) == SqlResultCode.EXISTING_USERNAME) {
             return SqlResultCode.EXISTING_USERNAME;
         }
 
-        //check for existing email
         try (PreparedStatement stmt = this.connection.prepareStatement(checkEmailExistenceQuery)) {
             stmt.setString(1, email);
             ResultSet resultSet = stmt.executeQuery();
@@ -77,8 +68,6 @@ public class SQLConnection {
             e.printStackTrace();
         }
     }
-
-
 
     public void safeUserData(String username, String email, String salt, String encryptedData) {
         try (PreparedStatement stmt = this.connection.prepareStatement(safeNewUserQuery)) {
@@ -105,18 +94,6 @@ public class SQLConnection {
         }
 
         return SqlResultCode.NOT_EXISTING_USERNAME;
-    }
-
-    public String getEmail(String username) {
-        try (PreparedStatement stmt = this.connection.prepareStatement(getEmailQuery)) {
-            stmt.setString(1, username);
-            ResultSet resultSet = stmt.executeQuery();
-            resultSet.next();
-            return resultSet.getString("email");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return "";
     }
 
     public SqlResultCode checkConfirmationCode(String username, int code) {
@@ -171,40 +148,27 @@ public class SQLConnection {
             int userStatus = getUserStatus(username);
             String salt = getSalt(username);
             String hashedData = SHA256.getHashString(salt + username + password);
-            try (PreparedStatement stmt = this.connection.prepareStatement(checkUserPassword)) {
-                stmt.setString(1, username);
-                stmt.setString(2, hashedData);
-                ResultSet resultSet = stmt.executeQuery();
-                if (resultSet.isBeforeFirst() && userStatus == 1) {
-                    return SqlResultCode.ALLOW_LOGIN;
-                } else if (resultSet.isBeforeFirst() && userStatus == 0) {
-                    return SqlResultCode.NOT_CONFIRMED;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            String expectedHashedData = getHashedData(username);
+            if (Objects.equals(expectedHashedData, hashedData) && userStatus == 1) {
+                return SqlResultCode.ALLOW_LOGIN;
+            } else if (Objects.equals(expectedHashedData, hashedData) && userStatus == 0) {
+                return SqlResultCode.NOT_CONFIRMED;
             }
         }
 
         return SqlResultCode.ACCESS_DENIED;
     }
 
-    public void safePublicKey(String connectionID, String key) {
-        try (PreparedStatement stmt = this.connection.prepareStatement(safePublicKeyQuery)) {
-            stmt.setString(1, connectionID);
-            stmt.setString(2, key);
-            stmt.executeUpdate();
+    public String getHashedData(String username) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(getHashedDataQuery)) {
+            stmt.setString(1, username);
+            ResultSet resultSet = stmt.executeQuery();
+            resultSet.next();
+            return resultSet.getString(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public void deletePublicKey(String connectionID) {
-        try (PreparedStatement stmt = this.connection.prepareStatement(deletePublicKeyQuery)) {
-            stmt.setString(1, connectionID);
-            stmt.executeUpdate();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        return "";
     }
 
     public void close() throws SQLException {

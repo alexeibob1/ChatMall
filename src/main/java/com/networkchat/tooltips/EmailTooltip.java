@@ -7,7 +7,7 @@ import javafx.util.Duration;
 
 public class EmailTooltip {
     private static final String info = """
-            This E-mail is already in use.
+            This E-mail is already in use or invalid.
             Please, enter another one.
             """;
 

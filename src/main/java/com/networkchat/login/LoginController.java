@@ -44,6 +44,8 @@ public class LoginController implements Controllable {
     @FXML
     private PasswordField ePassword;
 
+    private static final String ALLOWED_PATTERN = "[a-zA-Z0-9@.$\\-+]";
+
     Stage stage;
     StageManager stageManager;
     ClientSocket socket;
@@ -112,6 +114,16 @@ public class LoginController implements Controllable {
         Scene scene = this.stage.getScene();
         scene.getStylesheets().add(ChatApplication.class.getResource("styles/login.css").toExternalForm());
         cleanFields();
+        setKeyFilter(eUsername);
+        setKeyFilter(ePassword);
+    }
+
+    private void setKeyFilter(TextField field) {
+        field.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (!newValue.matches(ALLOWED_PATTERN)) {
+                field.setText(newValue.replaceAll("[^" + ALLOWED_PATTERN + "]", ""));
+            }
+        });
     }
 
     private void cleanFields() {
@@ -121,18 +133,18 @@ public class LoginController implements Controllable {
 
     @FXML
     void onBtnLoginClicked(MouseEvent event) {
+        if (eUsername.getText().isEmpty() || ePassword.getText().isEmpty()) {
+            DialogWindow.showDialog(Alert.AlertType.ERROR, "Error!", "Enter text in all fields", "Sorry, invalid input.");
+            return;
+        }
         try {
             ClientPacket clientPacket = new LoginClientPacket(ClientRequest.LOGIN, eUsername.getText(), SHA256.getHashString(ePassword.getText()));
             Idea idea = new Idea(this.encryptKey, this.decryptKey);
             this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
             this.socket.getOut().flush();
-
             byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
-
             String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
-
             ServerPacket serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
-
             switch (serverPacket.getResponse()) {
                 case LOGIN_ALLOWED -> {
                     stageManager.switchScene(FxmlView.CHATROOM, this.socket, eUsername.getText(), encryptKey, decryptKey);
@@ -142,6 +154,9 @@ public class LoginController implements Controllable {
                 }
                 case USER_NOT_CONFIRMED -> {
                     stageManager.switchScene(FxmlView.CONFIRMATION, this.socket, eUsername.getText(), encryptKey, decryptKey);
+                }
+                case ALREADY_LOGGED_IN -> {
+                    DialogWindow.showDialog(Alert.AlertType.ERROR, "Error!", "Already logged in!", "Sorry, but user is already logged in.");
                 }
             }
         } catch (Exception e) {

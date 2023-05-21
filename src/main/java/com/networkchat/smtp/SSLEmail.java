@@ -1,8 +1,10 @@
 package com.networkchat.smtp;
 
 import javax.mail.Authenticator;
+import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
+import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 
 public class SSLEmail {
@@ -27,7 +29,7 @@ public class SSLEmail {
         this.email = email;
     }
 
-    public void sendConfirmationMessage(String code) {
+    public void sendConfirmationMessage(String code) throws MessagingException, UnsupportedEncodingException {
         Properties props = new Properties();
         initProperties(props);
         Authenticator auth = new Authenticator() {

@@ -47,29 +47,30 @@ public class Idea {
             int x1 = ((data[dataPos + 2] & 0xFF) << 8) | (data[dataPos + 3] & 0xFF);
             int x2 = ((data[dataPos + 4] & 0xFF) << 8) | (data[dataPos + 5] & 0xFF);
             int x3 = ((data[dataPos + 6] & 0xFF) << 8) | (data[dataPos + 7] & 0xFF);
-            //
+
             int p = 0;
             for (int round = 0; round < rounds; round++) {
                 int y0 = mul(x0, key[p++]);
                 int y1 = add(x1, key[p++]);
                 int y2 = add(x2, key[p++]);
                 int y3 = mul(x3, key[p++]);
-                //
+
                 int t0 = mul(y0 ^ y2, key[p++]);
                 int t1 = add(y1 ^ y3, t0);
                 int t2 = mul(t1, key[p++]);
                 int t3 = add(t0, t2);
-                //
+
                 x0 = y0 ^ t2;
                 x1 = y2 ^ t2;
                 x2 = y1 ^ t3;
-                x3 = y3 ^ t3; }
-            //
+                x3 = y3 ^ t3;
+            }
+
             int r0 = mul(x0, key[p++]);
             int r1 = add(x2, key[p++]);
             int r2 = add(x1, key[p++]);
             int r3 = mul(x3, key[p++]);
-            //
+
             data[dataPos] = (byte)(r0 >> 8);
             data[dataPos + 1] = (byte)r0;
             data[dataPos + 2] = (byte)(r1 >> 8);
@@ -121,7 +122,6 @@ public class Idea {
     }
 
     protected void setKey(byte[] userKey) {
-        //set encrypt key
         if (userKey.length != 16) {
             throw new IllegalArgumentException(); }
         this.encryptKey = new int[rounds * 6 + 4];
@@ -131,8 +131,6 @@ public class Idea {
             this.encryptKey[i] = ((this.encryptKey[(i + 1) % 8 != 0 ? i - 7 : i - 15] << 9) | (this.encryptKey[(i + 2) % 8 < 2 ? i - 14 : i - 6] >> 7)) & 0xFFFF;
         }
 
-
-        //set decrypt key
         this.decryptKey = new int[this.encryptKey.length];
         int p = 0;
         int i = rounds * 6;
@@ -152,15 +150,4 @@ public class Idea {
             this.decryptKey[i + 3] = mulInv(this.encryptKey[p++]);
         }
     }
-
-    public static void main(String[] args) {
-        Idea idea = new Idea();
-        String s = "Да пошёл ты нахуй ldln  wlfnfa";
-
-        byte[] encr = idea.crypt(s.getBytes(), true);
-        byte[] decr = idea.crypt(encr, false);
-
-        String s1 = new String(decr, StandardCharsets.UTF_8);
-    }
-
 }
