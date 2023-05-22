@@ -27,7 +27,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
@@ -230,13 +229,9 @@ public class ChatroomController implements Controllable {
                     messageFlow.getStyleClass().add("userNotMe");
                 }
                 messageFlow.setLineSpacing(2);
-                int columnIndex = 1;
-                int columnSpan = 1;
-                int rowIndex = gpUsers.getRowCount();
-                int rowSpan = 1;
                 VBox vBox = new VBox(messageFlow);
                 vBox.setPadding(new Insets(5));
-                gpUsers.add(vBox, columnIndex, rowIndex, columnSpan, rowSpan);
+                gpUsers.add(vBox, 1, gpUsers.getRowCount(), 1, 1);
             }
         });
     }
