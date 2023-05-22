@@ -1,5 +1,6 @@
 package com.networkchat.registration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.networkchat.ChatApplication;
 import com.networkchat.client.ClientSocket;
 import com.networkchat.fxml.Controllable;
@@ -24,7 +25,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 
 public class RegistrationController implements Controllable {
 
@@ -100,13 +103,9 @@ public class RegistrationController implements Controllable {
             return;
         }
         try {
-            ClientPacket clientPacket = new RegistrationClientPacket(ClientRequest.REGISTER, eUsername.getText(), eEmail.getText(), SHA256.getHashString(ePassword.getText()));
-            Idea idea = new Idea(encryptKey, decryptKey);
-            this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
-            this.socket.getOut().flush();
-
+            registerUser();
             byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
-
+            Idea idea = new Idea(encryptKey, decryptKey);
             String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
 
             ServerPacket serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
@@ -126,6 +125,13 @@ public class RegistrationController implements Controllable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void registerUser() throws IOException, NoSuchAlgorithmException {
+        ClientPacket clientPacket = new RegistrationClientPacket(ClientRequest.REGISTER, eUsername.getText(), eEmail.getText(), SHA256.getHashString(ePassword.getText()));
+        Idea idea = new Idea(encryptKey, decryptKey);
+        this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
+        this.socket.getOut().flush();
     }
 
 
