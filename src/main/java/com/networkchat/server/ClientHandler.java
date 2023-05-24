@@ -251,7 +251,7 @@ public class ClientHandler implements Runnable {
                 if (Objects.equals(sender, clients.get(socket).getUsername())) {
                     serverPacket.setMessageStatus(MessageStatus.IS_SENT);
                 }
-                if (receiver != null) {
+                if (receiver != null && !Objects.equals(sender, clients.get(socket).getUsername())) {
                     serverPacket.setMessage(message.replaceFirst("@" + receiver, "").trim());
                     serverPacket.setMessageStatus(MessageStatus.IS_PERSONAL_GET);
                 }
