@@ -11,6 +11,7 @@ import com.networkchat.packets.server.ServerPacket;
 import com.networkchat.resources.FxmlView;
 import com.networkchat.security.idea.Idea;
 import com.networkchat.utils.DialogWindow;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -102,12 +103,11 @@ public class ConfirmationController implements Controllable {
                 return;
             }
             ClientPacket clientPacket = new ConfirmationClientPacket(ClientRequest.CONFIRM_REGISTRATION, this.username, confirmationCode);
-            Idea idea = new Idea(this.encryptKey, this.decryptKey);
-            this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
+            this.socket.getOut().writeUnshared(Idea.crypt(clientPacket.jsonSerialize(), true, this.encryptKey, this.decryptKey));
             this.socket.getOut().flush();
-            byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
-            String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
-            ServerPacket serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
+//            byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
+//            String decryptedJson = new String(Idea.crypt(encryptedJson, false, this.encryptKey, this.decryptKey), StandardCharsets.UTF_8);
+            ServerPacket serverPacket = ServerPacket.jsonDeserialize(Idea.crypt((byte[]) this.socket.getIn().readObject(), false, this.encryptKey, this.decryptKey));
             switch (serverPacket.getResponse()) {
                 case INVALID_CODE -> {
                     eConfirmationCode.setStyle(eConfirmationCode.getStyle() + errorStyle);
@@ -118,7 +118,10 @@ public class ConfirmationController implements Controllable {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Platform.runLater(() -> {
+                DialogWindow.showDialog(Alert.AlertType.ERROR, "Error", "Server was shutdown", "Unexpected server error happened!");
+                this.stage.close();
+            });
         }
     }
 

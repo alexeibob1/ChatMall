@@ -5,7 +5,7 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 
 public class Idea {
-    private final int rounds = 8;
+    private static final int rounds = 8;
 
     private int[] encryptKey = new int[52];
     private int[] decryptKey = new int[52];
@@ -30,7 +30,7 @@ public class Idea {
         return decryptKey;
     }
 
-    public byte[] crypt(byte[] rawData, boolean toEncrypt) {
+    public static byte[] crypt(byte[] rawData, boolean toEncrypt, int[] encryptKey, int[] decryptKey) {
         byte[] data = rawData;
         int length = rawData.length;
         if (length % 8 != 0) {

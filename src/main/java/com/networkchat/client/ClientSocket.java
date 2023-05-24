@@ -1,5 +1,7 @@
 package com.networkchat.client;
 
+import com.networkchat.security.idea.Idea;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;

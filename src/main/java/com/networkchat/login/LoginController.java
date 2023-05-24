@@ -12,6 +12,7 @@ import com.networkchat.resources.FxmlView;
 import com.networkchat.security.SHA256;
 import com.networkchat.security.idea.Idea;
 import com.networkchat.utils.DialogWindow;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -45,6 +46,8 @@ public class LoginController implements Controllable {
     private PasswordField ePassword;
 
     private static final String ALLOWED_PATTERN = "[a-zA-Z0-9@.$\\-+]";
+    private final int MAX_USERNAME_LENGTH = 20;
+    private final int MAX_PASSWORD_LENGTH = 20;
 
     Stage stage;
     StageManager stageManager;
@@ -116,6 +119,18 @@ public class LoginController implements Controllable {
         cleanFields();
         setKeyFilter(eUsername);
         setKeyFilter(ePassword);
+        eUsername.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (eUsername.getText().length() > MAX_USERNAME_LENGTH) {
+                String s = eUsername.getText().substring(0, MAX_USERNAME_LENGTH);
+                eUsername.setText(s);
+            }
+        });
+        ePassword.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (ePassword.getText().length() > MAX_PASSWORD_LENGTH) {
+                String s = ePassword.getText().substring(0, MAX_PASSWORD_LENGTH);
+                ePassword.setText(s);
+            }
+        });
     }
 
     private void setKeyFilter(TextField field) {
@@ -139,12 +154,11 @@ public class LoginController implements Controllable {
         }
         try {
             ClientPacket clientPacket = new LoginClientPacket(ClientRequest.LOGIN, eUsername.getText(), SHA256.getHashString(ePassword.getText()));
-            Idea idea = new Idea(this.encryptKey, this.decryptKey);
-            this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
+            this.socket.getOut().writeUnshared(Idea.crypt(clientPacket.jsonSerialize(), true, this.encryptKey, this.decryptKey));
             this.socket.getOut().flush();
-            byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
-            String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
-            ServerPacket serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
+//            byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
+//            String decryptedJson = new String(Idea.crypt(encryptedJson, false, this.encryptKey, this.decryptKey), StandardCharsets.UTF_8);
+            ServerPacket serverPacket = ServerPacket.jsonDeserialize(Idea.crypt((byte[]) this.socket.getIn().readObject(), false, this.encryptKey, this.decryptKey));
             switch (serverPacket.getResponse()) {
                 case LOGIN_ALLOWED -> {
                     stageManager.switchScene(FxmlView.CHATROOM, this.socket, eUsername.getText(), encryptKey, decryptKey);
@@ -160,7 +174,10 @@ public class LoginController implements Controllable {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Platform.runLater(() -> {
+                DialogWindow.showDialog(Alert.AlertType.ERROR, "Error", "Server was shutdown", "Unexpected server error happened!");
+                this.stage.close();
+            });
         }
     }
 }

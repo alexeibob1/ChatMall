@@ -71,6 +71,7 @@ public class ChatroomController implements Controllable {
 
     private final KeyCombination keyCombinationCtrlEnter = new KeyCodeCombination(KeyCode.ENTER, KeyCombination.CONTROL_DOWN);
     private final KeyCombination keyCombinationShiftEnter = new KeyCodeCombination(KeyCode.ENTER, KeyCombination.SHIFT_DOWN);
+    private final int MAX_MESSAGE_LENGTH = 4096;
 
     Stage stage;
     StageManager stageManager;
@@ -85,8 +86,7 @@ public class ChatroomController implements Controllable {
         Optional<ButtonType> dlgRes = DialogWindow.showDialog(Alert.AlertType.CONFIRMATION, "Logout", "You want to exit?", "Please, press OK if you want to leave chat room");
         if (dlgRes.isPresent() && dlgRes.get() == ButtonType.OK) {
             ClientPacket clientPacket = new ClientPacket(ClientRequest.DISCONNECT);
-            Idea idea = new Idea(this.encryptKey, this.decryptKey);
-            this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
+            this.socket.getOut().writeUnshared(Idea.crypt(clientPacket.jsonSerialize(), true, this.encryptKey, this.decryptKey));
             this.socket.getOut().flush();
             this.stageManager.switchScene(FxmlView.LOGIN, this.socket, this.username, this.encryptKey, this.decryptKey);
         }
@@ -150,14 +150,19 @@ public class ChatroomController implements Controllable {
                 event.consume();
             }
         });
+        eMessage.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (eMessage.getText().length() > MAX_MESSAGE_LENGTH) {
+                String s = eMessage.getText().substring(0, MAX_MESSAGE_LENGTH);
+                eMessage.setText(s);
+            }
+        });
         new Thread(() -> {
-            Idea idea = new Idea(this.encryptKey, this.decryptKey);
             ServerPacket serverPacket;
             try {
                 while (true) {
-                    byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
-                    String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
-                    serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
+//                    byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
+//                    String decryptedJson = new String(Idea.crypt(encryptedJson, false, this.encryptKey, this.decryptKey), StandardCharsets.UTF_8);
+                    serverPacket = ServerPacket.jsonDeserialize(Idea.crypt((byte[]) this.socket.getIn().readObject(), false, this.encryptKey, this.decryptKey));
                     switch (serverPacket.getResponse()) {
                         case NEW_USER_CONNECTED -> {
                             updateUsersList(((UserConnectionServerPacket)serverPacket).getUsernames());
@@ -171,7 +176,10 @@ public class ChatroomController implements Controllable {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Platform.runLater(() -> {
+                    DialogWindow.showDialog(Alert.AlertType.ERROR, "Error", "Server was shutdown", "Unexpected server error happened!");
+                    this.stage.close();
+                });
             }
         }).start();
     }
@@ -264,8 +272,7 @@ public class ChatroomController implements Controllable {
         try {
             if (!message.isEmpty()) {
                 ClientPacket clientPacket = new MessageClientPacket(ClientRequest.MESSAGE, username, message, ZonedDateTime.now(Clock.system(ZoneId.of("Europe/Minsk"))));
-                Idea idea = new Idea(this.encryptKey, this.decryptKey);
-                this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
+                this.socket.getOut().writeUnshared(Idea.crypt(clientPacket.jsonSerialize(), true, this.encryptKey, this.decryptKey));
                 this.socket.getOut().flush();
             }
         } catch (Exception e) {

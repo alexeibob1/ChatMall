@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
@@ -17,6 +18,10 @@ public class ServerPacket implements Serializable {
 
     public ServerPacket() {}
 
+    public void setResponse(ServerResponse response) {
+        this.response = response;
+    }
+
     public ServerPacket(ServerResponse response) {
         this.response = response;
     }
@@ -25,13 +30,13 @@ public class ServerPacket implements Serializable {
         return response;
     }
 
-    public String jsonSerialize() throws JsonProcessingException {
+    public byte[] jsonSerialize() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule()).disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return mapper.writeValueAsString(this);
+        return mapper.writeValueAsBytes(this);
     }
 
-    public static ServerPacket jsonDeserialize(String jsonValue) throws JsonProcessingException {
+    public static ServerPacket jsonDeserialize(byte[] jsonValue) throws IOException {
         return new ObjectMapper().registerModule(new JavaTimeModule()).disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE).enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY).readValue(jsonValue, ServerPacket.class);
     }
 

@@ -1,28 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.TextArea?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.Pane?>
-<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="914.0" prefWidth="912.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.networkchat.chat.ChatroomController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="914.0" prefWidth="981.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.networkchat.chat.ChatroomController">
    <children>
-      <Pane fx:id="bckgHeader" onMouseDragged="#onFormDragEntered" onMousePressed="#onMousePressed" prefHeight="42.0" prefWidth="933.0">
+      <Pane fx:id="bckgHeader" onMouseDragged="#onFormDragEntered" onMousePressed="#onMousePressed" prefHeight="42.0" prefWidth="981.0">
          <children>
-            <ImageView fx:id="btnClose" fitHeight="25.0" fitWidth="25.0" layoutX="898.0" layoutY="9.0" onMouseClicked="#onBtnCloseClicked" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="btnClose" fitHeight="25.0" fitWidth="25.0" layoutX="947.0" layoutY="9.0" onMouseClicked="#onBtnCloseClicked" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@../icons/close-icon.png" />
                </image>
             </ImageView>
-            <ImageView fx:id="btnMinimize" fitHeight="25.0" fitWidth="25.0" layoutX="864.0" layoutY="9.0" onMouseClicked="#onBtnMinimizeClicked" pickOnBounds="true" preserveRatio="true">
+            <ImageView fx:id="btnMinimize" fitHeight="25.0" fitWidth="25.0" layoutX="913.0" layoutY="9.0" onMouseClicked="#onBtnMinimizeClicked" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@../icons/minimize.png" />
                </image>
@@ -48,9 +40,9 @@
             </GridPane>
          </content>
       </ScrollPane>
-      <ScrollPane fx:id="spUsers" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" layoutX="684.0" layoutY="42.0" pannable="true" prefHeight="872.0" prefWidth="250.0">
+      <ScrollPane fx:id="spUsers" fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" layoutX="684.0" layoutY="42.0" pannable="true" prefHeight="872.0" prefWidth="296.0">
          <content>
-            <GridPane fx:id="gpUsers" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="870.0" prefWidth="248.0" vgap="10.0">
+            <GridPane fx:id="gpUsers" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="870.0" prefWidth="305.0" vgap="10.0">
                <columnConstraints>
                   <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" percentWidth="10.0" prefWidth="100.0" />
                   <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" percentWidth="80.0" prefWidth="100.0" />
@@ -67,6 +59,6 @@
       </ScrollPane>
       <TextArea fx:id="eMessage" layoutX="1.0" layoutY="863.0" onKeyPressed="#onEnterKeyPressed" prefHeight="49.0" prefWidth="572.0" promptText="Write your message here..." />
       <Button fx:id="btnSend" layoutX="574.0" layoutY="863.0" mnemonicParsing="false" onMouseClicked="#onBtnSendClicked" prefHeight="49.0" prefWidth="108.0" text="Send" />
-      <Label fx:id="lUsers" layoutX="706.0" layoutY="50.0" prefHeight="35.0" prefWidth="218.0" text="NOW IN THE CHAT" />
+      <Label fx:id="lUsers" layoutX="718.0" layoutY="50.0" prefHeight="35.0" prefWidth="249.0" text="NOW IN THE CHAT" />
    </children>
 </AnchorPane>

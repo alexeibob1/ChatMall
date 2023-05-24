@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
@@ -21,17 +22,21 @@ public class ClientPacket implements Serializable {
         this.request = request;
     }
 
+    public void setRequest(ClientRequest request) {
+        this.request = request;
+    }
+
     public ClientRequest getRequest() {
         return request;
     }
 
-    public String jsonSerialize() throws JsonProcessingException {
+    public byte[] jsonSerialize() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule()).disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return mapper.writeValueAsString(this);
+        return mapper.writeValueAsBytes(this);
     }
 
-    public static ClientPacket jsonDeserialize(String jsonValue) throws JsonProcessingException {
+    public static ClientPacket jsonDeserialize(byte[] jsonValue) throws IOException {
         return new ObjectMapper().registerModule(new JavaTimeModule()).disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE).readValue(jsonValue, ClientPacket.class);
     }
 }

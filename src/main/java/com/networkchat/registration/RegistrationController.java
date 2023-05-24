@@ -15,6 +15,7 @@ import com.networkchat.security.idea.Idea;
 import com.networkchat.tooltips.EmailTooltip;
 import com.networkchat.tooltips.UsernameTooltip;
 import com.networkchat.utils.DialogWindow;
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -67,6 +68,9 @@ public class RegistrationController implements Controllable {
 
     private static final String ALLOWED_PATTERN = "[a-zA-Z0-9@.$\\-+]";
 
+    private final int MAX_USERNAME_LENGTH = 20;
+    private final int MAX_PASSWORD_LENGTH = 20;
+
     Stage stage;
     StageManager stageManager;
     ClientSocket socket;
@@ -104,11 +108,10 @@ public class RegistrationController implements Controllable {
         }
         try {
             registerUser();
-            byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
-            Idea idea = new Idea(encryptKey, decryptKey);
-            String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
+//            byte[] encryptedJson = (byte[]) this.socket.getIn().readObject();
+//            String decryptedJson = new String(Idea.crypt(encryptedJson, false, encryptKey, decryptKey), StandardCharsets.UTF_8);
 
-            ServerPacket serverPacket = ServerPacket.jsonDeserialize(decryptedJson);
+            ServerPacket serverPacket = ServerPacket.jsonDeserialize(Idea.crypt((byte[]) this.socket.getIn().readObject(), false, encryptKey, decryptKey));
 
             switch (serverPacket.getResponse()) {
                 case EXISTING_USERNAME -> {
@@ -123,14 +126,16 @@ public class RegistrationController implements Controllable {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Platform.runLater(() -> {
+                DialogWindow.showDialog(Alert.AlertType.ERROR, "Error", "Server was shutdown", "Unexpected server error happened!");
+                this.stage.close();
+            });
         }
     }
 
     private void registerUser() throws IOException, NoSuchAlgorithmException {
         ClientPacket clientPacket = new RegistrationClientPacket(ClientRequest.REGISTER, eUsername.getText(), eEmail.getText(), SHA256.getHashString(ePassword.getText()));
-        Idea idea = new Idea(encryptKey, decryptKey);
-        this.socket.getOut().writeUnshared(idea.crypt(clientPacket.jsonSerialize().getBytes(), true));
+        this.socket.getOut().writeUnshared(Idea.crypt(clientPacket.jsonSerialize(), true, encryptKey, decryptKey));
         this.socket.getOut().flush();
     }
 
@@ -178,6 +183,18 @@ public class RegistrationController implements Controllable {
         setKeyFilter(eEmail);
         setKeyFilter(eUsername);
         setKeyFilter(ePassword);
+        eUsername.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (eUsername.getText().length() > MAX_USERNAME_LENGTH) {
+                String s = eUsername.getText().substring(0, MAX_USERNAME_LENGTH);
+                eUsername.setText(s);
+            }
+        });
+        ePassword.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (ePassword.getText().length() > MAX_PASSWORD_LENGTH) {
+                String s = ePassword.getText().substring(0, MAX_PASSWORD_LENGTH);
+                ePassword.setText(s);
+            }
+        });
     }
 
     private void setKeyFilter(TextField field) {

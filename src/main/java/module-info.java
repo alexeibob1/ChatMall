@@ -23,4 +23,5 @@ module com.networkchat {
     exports com.networkchat.packets.server to com.fasterxml.jackson.databind;
     exports com.networkchat.chat;
     opens com.networkchat.chat to javafx.fxml;
+    opens com.networkchat.packets.client to com.fasterxml.jackson.databind;
 }

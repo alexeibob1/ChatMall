@@ -41,16 +41,21 @@ public class ClientHandler implements Runnable {
 
     public void run() {
         ClientPacket clientPacket;
-        try (ObjectOutputStream out = this.socket.getOut();
-             ObjectInputStream in = this.socket.getIn()) {
+        ObjectOutputStream out = null;
+        ObjectInputStream in = null;
+        try {
+            out = this.socket.getOut();
+            in = this.socket.getIn();
 
-            Idea idea = getSessionKeys(out, in);
+            getSessionKeys(out, in);
 
             while (true) {
-                byte[] encryptedJson = (byte[]) in.readObject();
-                String decryptedJson = new String(idea.crypt(encryptedJson, false), StandardCharsets.UTF_8);
-                clientPacket = ClientPacket.jsonDeserialize(decryptedJson);
-                processUserRequest(clientPacket, idea, out);
+//                byte[] encryptedJson = (byte[]) in.readObject();
+                int[] encryptionKey = clients.get(socket).getEncryptKey();
+                int[] decryptionKey = clients.get(socket).getDecryptKey();
+               // String decryptedJson = new String(Idea.crypt(encryptedJson, false, encryptionKey, decryptionKey), StandardCharsets.UTF_8);
+                clientPacket = ClientPacket.jsonDeserialize(Idea.crypt((byte[]) in.readObject(), false, encryptionKey, decryptionKey));
+                processUserRequest(clientPacket, out);
             }
         } catch (Exception e) {
             System.out.println("Client closed app");
@@ -66,7 +71,7 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private Idea getSessionKeys(ObjectOutputStream out, ObjectInputStream in) throws NoSuchAlgorithmException, IOException, ClassNotFoundException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException {
+    private void getSessionKeys(ObjectOutputStream out, ObjectInputStream in) throws NoSuchAlgorithmException, IOException, ClassNotFoundException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException {
         KeyPair keyPair = KeyDistributor.getKeyPair();
         PublicKey publicKey = keyPair.getPublic();
         PrivateKey privateKey = keyPair.getPrivate();
@@ -81,32 +86,31 @@ public class ClientHandler implements Runnable {
         int[] encryptionKey = ByteArrayConverter.byteArrayToIntArray(decipher.doFinal(clientPacket.getEncryptKey()));
         int[] decryptionKey = ByteArrayConverter.byteArrayToIntArray(decipher.doFinal(clientPacket.getDecryptKey()));
         clients.put(this.socket, new ClientInfo(ClientStatus.NOT_LOGGED_IN, "", encryptionKey, decryptionKey));
-        return new Idea(encryptionKey, decryptionKey);
     }
 
-    private void processUserRequest(ClientPacket clientPacket, Idea idea, ObjectOutputStream out) throws IOException, NoSuchAlgorithmException {
+    private void processUserRequest(ClientPacket clientPacket, ObjectOutputStream out) throws IOException, NoSuchAlgorithmException {
         switch (clientPacket.getRequest()) {
             case REGISTER -> {
-                processUserRegistration((RegistrationClientPacket) clientPacket, idea, out);
+                processUserRegistration((RegistrationClientPacket) clientPacket, out);
             }
             case LOGIN -> {
-                processUserAuthorization((LoginClientPacket) clientPacket, idea, out);
+                processUserAuthorization((LoginClientPacket) clientPacket, out);
             }
             case CONFIRM_REGISTRATION -> {
-                processRegistrationConfirmation((ConfirmationClientPacket) clientPacket, idea, out);
+                processRegistrationConfirmation((ConfirmationClientPacket) clientPacket, out);
             }
             case MESSAGE -> {
                 processUserMessage((MessageClientPacket) clientPacket);
             }
             case DISCONNECT -> {
-                processDisconnection(idea, out);
+                processDisconnection(out);
             }
         }
     }
 
-    private void processDisconnection(Idea idea, ObjectOutputStream out) throws IOException {
+    private void processDisconnection(ObjectOutputStream out) throws IOException {
         clients.get(this.socket).setStatus(ClientStatus.NOT_LOGGED_IN);
-        out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.DISCONNECTED).jsonSerialize().getBytes(), true));
+        out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.DISCONNECTED).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
         out.flush();
         ArrayList<String> usernames = getListOfLoggedUsernames();
         broadcastUsersList(usernames);
@@ -143,8 +147,7 @@ public class ClientHandler implements Runnable {
                     } else {
                         serverPacket.setMessageStatus(MessageStatus.IS_GET);
                     }
-                    Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
-                    s.getOut().writeUnshared(clientCipher.crypt(serverPacket.jsonSerialize().getBytes(), true));
+                    s.getOut().writeUnshared(Idea.crypt(serverPacket.jsonSerialize(), true, clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey()));
                     s.getOut().flush();
                 }
             }
@@ -163,14 +166,12 @@ public class ClientHandler implements Runnable {
                     if (Objects.equals(clients.get(s).getUsername(), personalGetter)) {
                         MessageServerPacket serverPacket = new MessageServerPacket(ServerResponse.MESSAGE, sender, message, dateTime);
                         serverPacket.setMessageStatus(MessageStatus.IS_PERSONAL_GET);
-                        Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
-                        s.getOut().writeUnshared(clientCipher.crypt(serverPacket.jsonSerialize().getBytes(), true));
+                        s.getOut().writeUnshared(Idea.crypt(serverPacket.jsonSerialize(), true, clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey()));
                         s.getOut().flush();
                     } else if (Objects.equals(clients.get(s).getUsername(), sender)) {
                         MessageServerPacket serverPacket = new MessageServerPacket(ServerResponse.MESSAGE, sender, tempMessage.trim(), dateTime);
                         serverPacket.setMessageStatus(MessageStatus.IS_SENT);
-                        Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
-                        s.getOut().writeUnshared(clientCipher.crypt(serverPacket.jsonSerialize().getBytes(), true));
+                        s.getOut().writeUnshared(Idea.crypt(serverPacket.jsonSerialize(), true, clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey()));
                         s.getOut().flush();
                     }
                 }
@@ -178,76 +179,76 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void processRegistrationConfirmation(ConfirmationClientPacket clientPacket, Idea idea, ObjectOutputStream out) throws IOException {
+    private void processRegistrationConfirmation(ConfirmationClientPacket clientPacket, ObjectOutputStream out) throws IOException {
         String username = clientPacket.getUsername();
         int code = clientPacket.getCode();
         SqlResultCode codeCorrectness = dbConnection.checkConfirmationCode(username, code);
         switch (codeCorrectness) {
             case WRONG_CODE -> {
-                out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.INVALID_CODE).jsonSerialize().getBytes(), true));
+                out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.INVALID_CODE).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
                 out.flush();
             }
             case CORRECT_CODE -> {
-                out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.VALID_CODE).jsonSerialize().getBytes(), true));
+                out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.VALID_CODE).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
                 out.flush();
             }
         }
     }
 
-    private void processUserAuthorization(LoginClientPacket clientPacket, Idea idea, ObjectOutputStream out) throws IOException, NoSuchAlgorithmException {
+    private void processUserAuthorization(LoginClientPacket clientPacket, ObjectOutputStream out) throws IOException, NoSuchAlgorithmException {
         String username = clientPacket.getUsername();
         String password = clientPacket.getPassword();
         SqlResultCode accessPermission = dbConnection.checkPermission(username, password);
         switch (accessPermission) {
             case ACCESS_DENIED -> {
-                out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.LOGIN_DENIED).jsonSerialize().getBytes(), true));
+                out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.LOGIN_DENIED).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
                 out.flush();
             }
             case NOT_CONFIRMED -> {
-                out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.USER_NOT_CONFIRMED).jsonSerialize().getBytes(), true));
+                out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.USER_NOT_CONFIRMED).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
                 out.flush();
             }
             case ALLOW_LOGIN -> {
-                confirmUserAuthorization(username, idea, out);
+                confirmUserAuthorization(username, out);
             }
         }
     }
 
-    private void confirmUserAuthorization(String username, Idea idea, ObjectOutputStream out) throws IOException {
+    private void confirmUserAuthorization(String username, ObjectOutputStream out) throws IOException {
         ArrayList<String> usernames = getListOfLoggedUsernames();
         if (!usernames.contains(username)) {
             synchronized (clients) {
                 clients.get(this.socket).setStatus(ClientStatus.LOGGED_IN);
                 clients.get(this.socket).setUsername(username);
             }
-            out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.LOGIN_ALLOWED).jsonSerialize().getBytes(), true));
+            out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.LOGIN_ALLOWED).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
             out.flush();
             usernames.add(username);
             broadcastUsersList(usernames);
         } else {
-            out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.ALREADY_LOGGED_IN).jsonSerialize().getBytes(), true));
+            out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.ALREADY_LOGGED_IN).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
             out.flush();
         }
     }
 
-    private void processUserRegistration(RegistrationClientPacket clientPacket, Idea idea, ObjectOutputStream out) throws IOException, NoSuchAlgorithmException {
+    private void processUserRegistration(RegistrationClientPacket clientPacket, ObjectOutputStream out) throws IOException, NoSuchAlgorithmException {
         SqlResultCode sqlResult = dbConnection.checkNewUserInfo(clientPacket.getUsername(), clientPacket.getEmail());
         switch (sqlResult) {
             case EXISTING_USERNAME -> {
-                out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.EXISTING_USERNAME).jsonSerialize().getBytes(), true));
+                out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.EXISTING_USERNAME).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
                 out.flush();
             }
             case REPEATED_EMAIL -> {
-                out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.REPEATED_EMAIL).jsonSerialize().getBytes(), true));
+                out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.REPEATED_EMAIL).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
                 out.flush();
             }
             case SUCCESS -> {
-                confirmUserRegistration(clientPacket, idea, out);
+                confirmUserRegistration(clientPacket, out);
             }
         }
     }
 
-    private void confirmUserRegistration(RegistrationClientPacket clientPacket, Idea idea, ObjectOutputStream out) throws NoSuchAlgorithmException, IOException {
+    private void confirmUserRegistration(RegistrationClientPacket clientPacket, ObjectOutputStream out) throws NoSuchAlgorithmException, IOException {
         String username = clientPacket.getUsername();
         String email = clientPacket.getEmail();
         String password = clientPacket.getPassword();
@@ -259,14 +260,14 @@ public class ClientHandler implements Runnable {
         try {
             emailConnection.sendConfirmationMessage(hash);
         } catch (Exception e) {
-            out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.REPEATED_EMAIL).jsonSerialize().getBytes(), true));
+            out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.REPEATED_EMAIL).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
             out.flush();
             errorFlag = true;
         }
 
         if (!errorFlag) {
             dbConnection.safeUserData(username, email, salt, encryptedData);
-            out.writeUnshared(idea.crypt(new ServerPacket(ServerResponse.SUCCESSFUL_REGISTRATION).jsonSerialize().getBytes(), true));
+            out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.SUCCESSFUL_REGISTRATION).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
             out.flush();
             dbConnection.safeConfirmationCode(hash, username);
         }
@@ -288,9 +289,8 @@ public class ClientHandler implements Runnable {
         synchronized (clients) {
             for (ClientSocket s : clients.keySet()) {
                 if (clients.get(s).getStatus() == ClientStatus.LOGGED_IN) {
-                    Idea clientCipher = new Idea(clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey());
-                    s.getOut().writeUnshared(clientCipher.crypt(new UserConnectionServerPacket(ServerResponse.NEW_USER_CONNECTED, usernames)
-                            .jsonSerialize().getBytes(), true));
+                    s.getOut().writeUnshared(Idea.crypt(new UserConnectionServerPacket(ServerResponse.NEW_USER_CONNECTED, usernames)
+                            .jsonSerialize(), true, clients.get(s).getEncryptKey(), clients.get(s).getDecryptKey()));
                     s.getOut().flush();
                 }
             }
