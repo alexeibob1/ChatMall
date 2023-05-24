@@ -71,6 +71,8 @@ public class RegistrationController implements Controllable {
     private final int MAX_USERNAME_LENGTH = 20;
     private final int MAX_PASSWORD_LENGTH = 20;
 
+    private final int MAX_EMAIL_LENGTH = 60;
+
     Stage stage;
     StageManager stageManager;
     ClientSocket socket;
@@ -193,6 +195,12 @@ public class RegistrationController implements Controllable {
             if (ePassword.getText().length() > MAX_PASSWORD_LENGTH) {
                 String s = ePassword.getText().substring(0, MAX_PASSWORD_LENGTH);
                 ePassword.setText(s);
+            }
+        });
+        eEmail.textProperty().addListener((observableValue, oldValue, newValue) -> {
+            if (eEmail.getText().length() > MAX_EMAIL_LENGTH) {
+                String s = eEmail.getText().substring(0, MAX_EMAIL_LENGTH);
+                eEmail.setText(s);
             }
         });
     }

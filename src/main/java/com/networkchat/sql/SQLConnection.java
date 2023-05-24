@@ -1,10 +1,17 @@
 package com.networkchat.sql;
 
 
+import com.networkchat.chat.Message;
+import com.networkchat.packets.server.MessageServerPacket;
 import com.networkchat.security.SHA256;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class SQLConnection {
@@ -34,6 +41,9 @@ public class SQLConnection {
     private final String getUserStatusQuery = "SELECT enabled FROM `users_auth` WHERE username=? LIMIT 1";
 
     private final String getHashedDataQuery = "SELECT password FROM `users_auth` WHERE username=? LIMIT 1";
+
+    private final String saveMessageQuery = "INSERT INTO `messages` (sender_name, receiver_name, message, message_time) VALUES " +
+            "(?, ?, ?, ?)";
 
     public SQLConnection() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.cj.jdbc.Driver");
@@ -169,6 +179,36 @@ public class SQLConnection {
             e.printStackTrace();
         }
         return "";
+    }
+
+    public void saveMessage(String sender, String receiver, ZonedDateTime dateTime, String message) {
+        try (PreparedStatement stmt = this.connection.prepareStatement(saveMessageQuery)) {
+            stmt.setString(1, sender);
+            stmt.setString(2, receiver);
+            stmt.setString(3, message);
+            stmt.setTimestamp(4, Timestamp.valueOf(dateTime.toLocalDateTime()));
+            stmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<Message> getAllMessages() {
+        List<Message> messages = new ArrayList<>();
+        try (PreparedStatement stmt = this.connection.prepareStatement("SELECT * FROM `messages`")) {
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                String sender = resultSet.getString("sender_name");
+                String receiver = resultSet.getString("receiver_name");
+                String message = resultSet.getString("message");
+                ZonedDateTime timestamp = resultSet.getTimestamp("message_time").toLocalDateTime().atZone(ZoneId.of("Europe/Minsk"));
+                Message m = new Message(sender, receiver, timestamp, message);
+                messages.add(m);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return messages;
     }
 
     public void close() throws SQLException {

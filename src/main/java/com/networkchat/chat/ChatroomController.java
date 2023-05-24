@@ -195,7 +195,7 @@ public class ChatroomController implements Controllable {
             messageText.getStyleClass().add("messageContent");
             messageFlow.setLineSpacing(2);
             messageFlow.getStyleClass().add("message");
-            Text recordDate = new Text(dateTime.format(DateTimeFormatter.ofPattern("hh : mm a ")));
+            Text recordDate = new Text(dateTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm a ")));
             recordDate.getStyleClass().add("date");
             switch (status) {
                 case IS_PERSONAL_GET, IS_GET -> {

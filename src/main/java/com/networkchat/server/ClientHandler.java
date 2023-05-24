@@ -1,5 +1,6 @@
 package com.networkchat.server;
 
+import com.networkchat.chat.Message;
 import com.networkchat.client.ClientSocket;
 import com.networkchat.client.ClientStatus;
 import com.networkchat.packets.client.*;
@@ -22,8 +23,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.sql.ResultSet;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -67,7 +71,6 @@ public class ClientHandler implements Runnable {
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
-            e.printStackTrace();
         }
     }
 
@@ -120,11 +123,13 @@ public class ClientHandler implements Runnable {
         String message = clientPacket.getMessage();
         ArrayList<String> usernames = getListOfLoggedUsernames();
         boolean isPersonalMessage = false;
-        String personalGetter = "";
+        String personalGetter = null;
         if (message.trim().startsWith("@") && usernames.contains(message.trim().split(" ")[0].trim().replaceAll("@", ""))) {
             personalGetter = message.split(" ")[0].trim().replaceAll("@", "");
             if (!personalGetter.equals(clients.get(socket).getUsername())) {
                 isPersonalMessage = true;
+            } else {
+                personalGetter = null;
             }
         }
         if (isPersonalMessage) {
@@ -132,6 +137,7 @@ public class ClientHandler implements Runnable {
         } else {
             sendBroadcastMessage(clientPacket);
         }
+        dbConnection.saveMessage(clientPacket.getSender(), personalGetter, clientPacket.getDateTime(), clientPacket.getMessage().trim());
     }
 
     private void sendBroadcastMessage(MessageClientPacket clientPacket) throws IOException {
@@ -225,9 +231,35 @@ public class ClientHandler implements Runnable {
             out.flush();
             usernames.add(username);
             broadcastUsersList(usernames);
+            sendSavedMessages(out);
         } else {
             out.writeUnshared(Idea.crypt(new ServerPacket(ServerResponse.ALREADY_LOGGED_IN).jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
             out.flush();
+        }
+    }
+
+    private void sendSavedMessages(ObjectOutputStream out) {
+        List<Message> dbMessages = dbConnection.getAllMessages();
+        try {
+            for (Message msgInfo : dbMessages) {
+                String sender = msgInfo.getSender();
+                String receiver = msgInfo.getReceiver();
+                String message = msgInfo.getMessage();
+                ZonedDateTime timestamp = msgInfo.getDateTime().toLocalDateTime().atZone(ZoneId.of("Europe/Minsk"));
+                MessageServerPacket serverPacket = new MessageServerPacket(ServerResponse.MESSAGE, sender, message, timestamp);
+                serverPacket.setMessageStatus(MessageStatus.IS_GET);
+                if (Objects.equals(sender, clients.get(socket).getUsername())) {
+                    serverPacket.setMessageStatus(MessageStatus.IS_SENT);
+                }
+                if (receiver != null) {
+                    serverPacket.setMessage(message.replaceFirst("@" + receiver, "").trim());
+                    serverPacket.setMessageStatus(MessageStatus.IS_PERSONAL_GET);
+                }
+                out.writeUnshared(Idea.crypt(serverPacket.jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
+                out.flush();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
