@@ -20,16 +20,8 @@ public class ClientSocket {
         return socket;
     }
 
-    public void setSocket(Socket socket) {
-        this.socket = socket;
-    }
-
     public ObjectOutputStream getOut() {
         return out;
-    }
-
-    public void setOut(ObjectOutputStream out) {
-        this.out = out;
     }
 
     public ObjectInputStream getIn() {

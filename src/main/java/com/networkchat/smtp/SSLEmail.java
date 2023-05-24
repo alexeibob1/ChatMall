@@ -19,7 +19,7 @@ public class SSLEmail {
 
             [[code]]
 
-            Remember, that this code is valid for 30 minutes.
+            Remember, that this code is valid for 5 minutes.
 
             Thank you,
             Team of ChatMall application.""";

@@ -3,6 +3,7 @@ package com.networkchat.packets.server;
 import java.io.Serializable;
 
 public class PublicKeyServerPacket extends ServerPacket implements Serializable {
+    private static final long serialVersionUID = 8L;
     private byte[] publicKey;
 
     public PublicKeyServerPacket() {}

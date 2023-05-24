@@ -12,6 +12,7 @@ import java.io.Serializable;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "@class")
 
 public class ServerPacket implements Serializable {
+    private static final long serialVersionUID = 9L;
     private ServerResponse response;
 
     public ServerPacket() {}
@@ -22,10 +23,6 @@ public class ServerPacket implements Serializable {
 
     public ServerResponse getResponse() {
         return response;
-    }
-
-    public void setResponse(ServerResponse response) {
-        this.response = response;
     }
 
     public String jsonSerialize() throws JsonProcessingException {

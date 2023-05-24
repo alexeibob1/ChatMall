@@ -11,14 +11,6 @@ public enum ImageResources {
         public Image getImage() {
             return img;
         }
-    },
-
-
-    WARNING_ICON {
-        @Override
-        public Image getImage() {
-            return null;
-        }
     };
 
     public abstract Image getImage();

@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.time.ZonedDateTime;
 
 public class MessageServerPacket extends ServerPacket implements Serializable {
+    private static final long serialVersionUID = 7L;
     private String sender;
     private String message;
 

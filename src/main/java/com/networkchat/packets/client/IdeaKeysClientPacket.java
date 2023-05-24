@@ -1,6 +1,7 @@
 package com.networkchat.packets.client;
 
 public class IdeaKeysClientPacket extends ClientPacket{
+    private static final long serialVersionUID = 3L;
     private byte[] encryptKey;
 
     private byte[] decryptKey;

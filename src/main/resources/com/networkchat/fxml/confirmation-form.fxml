@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
 
-<AnchorPane fx:id="bckgLogin" onMouseDragged="#onFormDragEntered" onMousePressed="#onMousePressed" prefHeight="340.0" prefWidth="559.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.networkchat.registration.ConfirmationController">
+<AnchorPane fx:id="bckgLogin" onMouseDragged="#onFormDragEntered" onMousePressed="#onMousePressed" prefHeight="340.0" prefWidth="559.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.networkchat.registration.ConfirmationController">
    <children>
       <Label fx:id="lCodeSent" layoutX="48.0" layoutY="47.0" prefHeight="49.0" prefWidth="487.0" text="Confirmation code was successfully sent!" />
       <Label fx:id="lCheckInbox" layoutX="24.0" layoutY="95.0" prefHeight="67.0" prefWidth="512.0" text="Check your inbox (and SPAM folder) and enter confirmation code in the field below." wrapText="true" />
@@ -21,7 +18,7 @@
             <Image url="@../icons/minimize.png" />
          </image>
       </ImageView>
-      <Label fx:id="lValidTime" layoutX="124.0" layoutY="162.0" prefHeight="39.0" prefWidth="336.0" text="The code will be valid for 30 minutes!" wrapText="true" />
+      <Label fx:id="lValidTime" layoutX="124.0" layoutY="162.0" prefHeight="39.0" prefWidth="336.0" text="The code is valid for 5 minutes!" wrapText="true" />
       <TextField fx:id="eConfirmationCode" layoutX="53.0" layoutY="215.0" prefHeight="35.0" prefWidth="445.0" promptText="Confirmation code" />
       <Button fx:id="btnConfirm" layoutX="156.0" layoutY="266.0" mnemonicParsing="false" onMouseClicked="#onBtnConfirmClicked" prefHeight="42.0" prefWidth="247.0" text="Confirm" />
    </children>

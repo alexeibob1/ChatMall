@@ -3,6 +3,7 @@ package com.networkchat.packets.client;
 import java.io.Serializable;
 
 public class ConfirmationClientPacket extends ClientPacket implements Serializable {
+    private static final long serialVersionUID = 2L;
     private String username;
     private int code;
 
@@ -26,7 +27,4 @@ public class ConfirmationClientPacket extends ClientPacket implements Serializab
         return code;
     }
 
-    public void setCode(int code) {
-        this.code = code;
-    }
 }

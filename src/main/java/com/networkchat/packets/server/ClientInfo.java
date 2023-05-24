@@ -37,15 +37,8 @@ public class ClientInfo {
         return encryptKey;
     }
 
-    public void setEncryptKey(int[] encryptKey) {
-        this.encryptKey = encryptKey;
-    }
-
     public int[] getDecryptKey() {
         return decryptKey;
     }
 
-    public void setDecryptKey(int[] decryptKey) {
-        this.decryptKey = decryptKey;
-    }
 }

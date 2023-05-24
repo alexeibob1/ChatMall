@@ -3,6 +3,7 @@ package com.networkchat.packets.client;
 import java.io.Serializable;
 
 public class LoginClientPacket extends ClientPacket implements Serializable {
+    private static final long serialVersionUID = 4L;
     private String username;
 
     private String password;

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class UserConnectionServerPacket extends ServerPacket implements Serializable {
+    private static final long serialVersionUID = 10L;
     private ArrayList<String> usernames = new ArrayList<>();
 
     public UserConnectionServerPacket(ServerResponse response, ArrayList<String> usernames) {
