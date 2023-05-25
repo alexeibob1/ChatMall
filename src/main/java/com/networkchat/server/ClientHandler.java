@@ -255,8 +255,10 @@ public class ClientHandler implements Runnable {
                     serverPacket.setMessage(message.replaceFirst("@" + receiver, "").trim());
                     serverPacket.setMessageStatus(MessageStatus.IS_PERSONAL_GET);
                 }
-                out.writeUnshared(Idea.crypt(serverPacket.jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
-                out.flush();
+                if (receiver == null || Objects.equals(receiver, clients.get(socket).getUsername()) || Objects.equals(sender, clients.get(socket).getUsername())) {
+                    out.writeUnshared(Idea.crypt(serverPacket.jsonSerialize(), true, clients.get(socket).getEncryptKey(), clients.get(socket).getDecryptKey()));
+                    out.flush();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
